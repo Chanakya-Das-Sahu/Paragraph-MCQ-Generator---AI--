@@ -1,0 +1,72 @@
+Get me 10 MCQ questions from this given content in below given format , nothing extra even avoid the word json [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]
+
+
+  // <div className="transform animate-flip border-[5px] rounded-full p-2">
+        //   <img src={photo} width='200px'  className="rounded-full" />
+        // </div>
+        // <div className="border-4 rounded-full p-2">
+        //   <img src={photo} width='200px' className="rounded-full" />
+        // </div>
+        // <div className="relative inline-block w-[216px] h-[216px]">
+        //   <div className="absolute inset-0 rounded-full border-4 border-gray-300 animate-spin">
+        //     <div className="w-full h-full border-4 border-t-blue-500 rounded-full"></div>
+        //   </div>
+        //   <img src={photo} width="210px" className="rounded-full border-2" alt="Loading..." />
+        // </div>
+
+
+
+
+const [questionArr, setQuestionArr] = useState([
+    {
+      question: "What is the capital of France?",
+      options: {
+        A: "Berlin",
+        B: "Madrid",
+        C: "Paris",
+        D: "Rome",
+      },
+      answer: "C",
+    },
+    {
+      question: "Which programming language is used for web development?",
+      options: {
+        A: "Python",
+        B: "JavaScript",
+        C: "C++",
+        D: "Java",
+      },
+      answer: "B",
+    },
+    {
+      question: "What is the boiling point of water in Celsius?",
+      options: {
+        A: "90°C",
+        B: "100°C",
+        C: "120°C",
+        D: "80°C",
+      },
+      answer: "B",
+    },
+    {
+      question: "Who wrote the play 'Romeo and Juliet'?",
+      options: {
+        A: "William Wordsworth",
+        B: "William Shakespeare",
+        C: "Charles Dickens",
+        D: "Mark Twain",
+      },
+      answer: "B",
+    },
+    {
+      question: "What is the chemical symbol for water?",
+      options: {
+        A: "H2O",
+        B: "O2",
+        C: "CO2",
+        D: "NaCl",
+      },
+      answer: "A",
+    },
+  ])
+
