@@ -28,7 +28,7 @@ app.post('/htmlContent', (req, res) => {
    const mailOptions = {
       from: 'ccccsahu@gmail.com',
       to: gmail,
-      subject: 'Chanakya Ecommerce OTP Verification',
+      subject: 'AI Based MCQ Generator Result',
       html: htmlContent
    };
 
@@ -39,7 +39,7 @@ app.post('/htmlContent', (req, res) => {
          console.error(error);
       } else {
          console.log('Email sent: ' + info.response);
-         res.json({ msg: 'otp sent' })
+         res.json({ msg: 'Result Sent' })
       }
 
    });
