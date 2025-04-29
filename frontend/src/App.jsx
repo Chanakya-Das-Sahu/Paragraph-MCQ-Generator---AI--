@@ -3,6 +3,7 @@ import axios from 'axios'
 
 import Questions from './Questions'
 import photo from './photo.jpg'
+import loading from './loading.jpg'
 const InnovativeForm = () => {
 
   //key
@@ -38,7 +39,7 @@ const InnovativeForm = () => {
  }
   const handleSubmit = async () => {
     setSubmitted(true)
-    const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give 100% pure json format as a response that directly can be parsed as JSON by JSON.parse() method  : 
+    const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give in below given json format  , our highest priority is JSON format response , please do not send any other except this json formate , please send medium hard questions : 
     [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]`
 
     const payload = { "contents": [{ "parts": [{ "text": content }] }] }
@@ -52,9 +53,9 @@ const InnovativeForm = () => {
   };
 
   return (
-    <div className={`flex items-center justify-center p-12 bg-gradient-to-r from-teal-500 via-indigo-600 to-purple-700 h-screen overflow-y-auto`}>
+    <div className={`flex items-center justify-center p-5 bg-gradient-to-r from-teal-500 via-indigo-600 to-purple-700 h-screen overflow-y-auto`}>
       <div className={`bg-white rounded-xl shadow-xl w-full p-5 max-w-4xl space-y-2 transform transition-transform duration-500 hover:scale-105 ${submitted ? 'hidden' : ''} `}>
-        <img src={photo} width='100px' height='80px' className='rounded-[50px] mx-auto' />
+        <img src={loading} width='100px' height='80px' className='rounded-[50px] mx-auto' />
         <h1 className="text-4xl font-semibold text-center text-gray-800">
           Input Your Paragraph
         </h1>
@@ -105,7 +106,7 @@ const InnovativeForm = () => {
               <div className="w-full h-full border-4 border-t-blue-500 rounded-full"></div>
             </div>
             <img
-              src={photo}
+              src={loading}
               width="225px"
               className="rounded-full h-full object-cover p-4"
               alt="Loading..."
