@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LightningBoltIcon, DocumentTextIcon, CogIcon, ChartBarIcon, AcademicCapIcon, CheckCircleIcon } from '@heroicons/react/outline';
 import { useNavigate } from 'react-router-dom';
+import loading from './loading.jpg'
 export default function HomePage() {
     const navigate = useNavigate();
     const [activeFeature, setActiveFeature] = useState(0);
@@ -35,7 +36,8 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex items-center">
-                            <AcademicCapIcon className="h-8 w-8 text-indigo-600" />
+                            {/* <AcademicCapIcon className="h-8 w-8 text-indigo-600" /> */}
+                            <img src={loading} alt="Logo" className="h-12 w-12 rounded-full" />
                             <span className="ml-2 text-xl font-bold text-gray-800">MCQ Generator</span>
                         </div>
                         <div className="flex items-center space-x-4">
