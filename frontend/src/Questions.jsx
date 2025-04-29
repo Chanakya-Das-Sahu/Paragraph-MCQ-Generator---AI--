@@ -46,7 +46,7 @@ const Questions = ({ questionArr }) => {
     `;
         // html += ``
         //  console.log('html', html)
-        const res = await axios.post('http://localhost:3000/htmlContent', { htmlContent: html, gmail: gmail })
+        const res = await axios.post('https://paragraph-mcq-generator-ai.vercel.app/htmlContent', { htmlContent: html, gmail: gmail })
         console.log('res', res)
 
 
