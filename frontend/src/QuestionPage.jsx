@@ -3,17 +3,76 @@ import { useState } from "react";
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useNavigate } from "react-router-dom";
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
-const Questions = ({ questionArr , changeSubmitted}) => {
-    const navigate = useNavigate()
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+
+
+const Questions = ({ questionArr, changeSubmitted }) => {
+
     const [selectedAnswers, setSelectedAnswers] = useState({});
+    const [chart, setChart] = useState({ right: 0, notAnswered: 0, wrong: 0 })
     const [showResults, setShowResults] = useState(false);
     const [gmail, setGmail] = useState('')
-    const[sending,setSending]=useState(false)
+    const [sending, setSending] = useState(false)
+
+
+    const PieChart = () => {
+        const options = {
+            plugins: {
+                datalabels: {
+                    color: 'white', // Label color inside slices
+                    font: {
+                        weight: 'bold',
+                        size: 16,
+                    },
+                },
+                legend: {
+                    labels: {
+                        color: 'white', // Legend label color
+                    },
+                },
+            },
+        };
+
+        const data = {
+            labels: [`${chart.right}`, `${chart.wrong}`, `${chart.notAnswered}`],
+            datasets: [
+                {
+                    label: 'Answeres',
+                    // data: [`right:${chart.right}`, `wrong:${chart.wrong}`, `not answered:${chart.notAnswered}`],
+                    data:[chart.right, chart.wrong, chart.notAnswered],
+                    backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56'],
+                    borderWidth: 1,
+                },
+            ],
+        };
+
+        return <Pie data={data} options={options} />;
+    };
+
     const handleOptionChange = (questionIndex, option) => {
         setSelectedAnswers({ ...selectedAnswers, [questionIndex]: option });
+
+        if (questionArr[questionIndex].answer === option) {
+            handleChart(1)
+        }
+        else {
+            handleChart(2)
+        }
     };
+
+    const handleChart = (num) => {
+        if (num == 1) {
+            setChart({ ...chart, right: chart.right + 1 })
+        } else if (num == 2) {
+            setChart({ ...chart, wrong: chart.wrong + 1 })
+        } else if (num == 3) {
+            setChart({ ...chart, notAnswered: chart.notAnswered + 1 })
+        }
+    }
 
     const generateHtmlContent = async () => {
         setSending(true)
@@ -54,7 +113,7 @@ const Questions = ({ questionArr , changeSubmitted}) => {
         //  console.log('html', html)
         const res = await axios.post('https://paragraph-mcq-generator-ai.vercel.app/htmlContent', { htmlContent: html, gmail: gmail })
 
-        if (res.data.msg ==='Result Sent') {
+        if (res.data.msg === 'Result Sent') {
             toast.success('Result Sent to your Gmail', {
                 position: "top-right",
                 autoClose: 2000,
@@ -76,18 +135,25 @@ const Questions = ({ questionArr , changeSubmitted}) => {
                 progress: undefined,
             });
         }
-setSending(false)
+        setSending(false)
     }
 
     const calculateResults = () => {
         setShowResults(true);
+        // change the data type to number or int whatever in javascript 
+        const total = chart.right + chart.wrong
+        console.log('total', total)
+        const notAnswered = questionArr.length - total
+        console.log('notAnswered', notAnswered)
+        setChart({ ...chart, notAnswered: notAnswered })
+        console.log('chart', chart)
     };
 
     return (
         <>
 
             <div className={`max-w-xl mx-auto p-5 h-screen`}>
-                <ToastContainer/>
+                <ToastContainer />
                 <div className={`flex flex-col h-auto ${showResults ? 'hidden' : ' '}`}>
                     {questionArr.map((question, index) => (
                         <div key={index} className="mb-6 bg-white p-4 shadow rounded">
@@ -155,6 +221,13 @@ setSending(false)
                             </div>
                         ))}
 
+                        <div className="w-[320px] flex flex-col justify-center items-center mt-10 mx-auto">
+                            <span className="text-white">Total: {questionArr.length}</span>
+                            <PieChart />
+                        </div>
+                        <br/><br/>
+                        <br />
+
                         <button
                             onClick={() => { changeSubmitted(false) }}
                             className="border-2 bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 mx-auto"
@@ -169,11 +242,18 @@ setSending(false)
                             <button
                                 onClick={generateHtmlContent}
                                 className="border-2 bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 mx-auto" disabled={!gmail || gmail.length < 5 || !gmail.includes('@') || !gmail.includes('.com') || sending}
-                            >{sending ? 'Sending...':'Send Result'}</button>
+                            >{sending ? 'Sending...' : 'Send Result'}</button>
                         </div>
-                        <br /><br />
+                       
+
                     </div >
                 )}
+
+
+
+
+
+
             </div >
         </>
     )
