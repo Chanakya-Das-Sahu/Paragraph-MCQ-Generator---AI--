@@ -11,7 +11,7 @@ const InnovativeForm = () => {
   //data variables
   const [questionArr, setQuestionArr] = useState([])
   const [paragraph, setParagraph] = useState('')
-  const [numOfMCQ, setNumOfMCQ] = useState(0)
+  const [numOfMCQ, setNumOfMCQ] = useState(5)
   
   // alert variable 
 
@@ -19,7 +19,12 @@ const InnovativeForm = () => {
   const[mcqAlert,setMcqAlert] = useState(false)
   // auxillary varialbes
   const [submitted, setSubmitted] = useState(false);
-
+const changeSubmitted = () => {
+ setSubmitted(false)
+  setQuestionArr([])
+  setParagraph('')
+  setNumOfMCQ(5)
+}
  const validate = () =>{
   if(paragraph && numOfMCQ>0){
     handleSubmit()
@@ -67,6 +72,7 @@ const InnovativeForm = () => {
         {/* Input Field */}
         <textarea
           onChange={(e) => { setParagraph(e.target.value) }}
+          value={paragraph}
           className="w-full h-[250px] p-2 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500  resize-none"
           placeholder="Your insights here..."
         ></textarea>
@@ -88,6 +94,7 @@ const InnovativeForm = () => {
             <input
               type='number'
               onChange={(e) => { setNumOfMCQ(e.target.value) }}
+              value={numOfMCQ}
               className={`border-2 border-gray-300 bg-gray rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-[60px] h-10
              `}
             />
@@ -119,7 +126,7 @@ const InnovativeForm = () => {
 
 
       {(submitted && questionArr.length > 0) &&
-        <Questions questionArr={questionArr} />
+        <Questions questionArr={questionArr} changeSubmitted={changeSubmitted}/>
       }
 
     </div>

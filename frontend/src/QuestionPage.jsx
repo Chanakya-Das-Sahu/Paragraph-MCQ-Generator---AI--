@@ -3,8 +3,10 @@ import { useState } from "react";
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from "react-router-dom";
 
-const Questions = ({ questionArr }) => {
+const Questions = ({ questionArr , changeSubmitted}) => {
+    const navigate = useNavigate()
     const [selectedAnswers, setSelectedAnswers] = useState({});
     const [showResults, setShowResults] = useState(false);
     const [gmail, setGmail] = useState('')
@@ -154,7 +156,7 @@ setSending(false)
                         ))}
 
                         <button
-                            onClick={() => { location.reload() }}
+                            onClick={() => { changeSubmitted(false) }}
                             className="border-2 bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 mx-auto"
                         >
                             Refresh
