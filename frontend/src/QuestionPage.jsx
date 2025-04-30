@@ -43,7 +43,7 @@ const Questions = ({ questionArr, changeSubmitted }) => {
                 {
                     label: 'Answeres',
                     // data: [`right:${chart.right}`, `wrong:${chart.wrong}`, `not answered:${chart.notAnswered}`],
-                    data:[chart.right, chart.wrong, chart.notAnswered],
+                    data: [chart.right, chart.wrong, chart.notAnswered],
                     backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56'],
                     borderWidth: 1,
                 },
@@ -225,7 +225,7 @@ const Questions = ({ questionArr, changeSubmitted }) => {
                             <span className="text-white">Total: {questionArr.length}</span>
                             <PieChart />
                         </div>
-                        <br/><br/>
+                        <br /><br />
                         <br />
 
                         <button
@@ -244,8 +244,8 @@ const Questions = ({ questionArr, changeSubmitted }) => {
                                 className="border-2 bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 mx-auto" disabled={!gmail || gmail.length < 5 || !gmail.includes('@') || !gmail.includes('.com') || sending}
                             >{sending ? 'Sending...' : 'Send Result'}</button>
                         </div>
-                       
 
+                        <br /><br /><br />
                     </div >
                 )}
 
