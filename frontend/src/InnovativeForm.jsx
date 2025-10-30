@@ -48,7 +48,7 @@ const changeSubmitted = () => {
 
     const payload = { "contents": [{ "parts": [{ "text": content }] }] }
     setParagraph('')
-    const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apikey}`, payload)
+    const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apikey}`, payload)
     const resText = res?.data?.candidates[0]?.content?.parts[0]?.text
     console.log('es', resText)
     const stringJSON = resText.match(/\[.*\]/s)?.[0]
