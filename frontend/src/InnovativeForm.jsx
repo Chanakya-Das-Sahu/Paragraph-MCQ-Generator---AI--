@@ -3,11 +3,15 @@ import axios from 'axios'
 import Questions from './QuestionPage'
 import photo from './photo.jpg'
 import loading from './loading.jpg'
+
+import { GoogleGenAI } from '@google/genai';
 const InnovativeForm = () => {
 
   //key
   const apikey = import.meta.env.VITE_API_KEY;
+  // const apikey = '';
 
+const ai = apikey ? new GoogleGenAI({ apiKey: apikey }) : null;
   //data variables
   const [questionArr, setQuestionArr] = useState([])
   const [paragraph, setParagraph] = useState('')
@@ -41,20 +45,196 @@ const changeSubmitted = () => {
      }
   }
  }
-  const handleSubmit = async () => {
-    setSubmitted(true)
-    const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give in below given json format  , our highest priority is JSON format response , please do not send any other except this json formate , please send medium hard questions : 
-    [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]`
 
-    const payload = { "contents": [{ "parts": [{ "text": content }] }] }
-    setParagraph('')
-    const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apikey}`, payload)
-    const resText = res?.data?.candidates[0]?.content?.parts[0]?.text
-    console.log('es', resText)
-    const stringJSON = resText.match(/\[.*\]/s)?.[0]
-    const jsn = JSON.parse(stringJSON)
-    setQuestionArr(jsn)
-  };
+ // Add this helper function before the InnovativeForm component
+const fixIncompleteJSON = (incompleteJSON) => {
+  try {
+    // Count open brackets and close them
+    let openBraces = 0;
+    let openBrackets = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = 0; i < incompleteJSON.length; i++) {
+      const char = incompleteJSON[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (char === '{') openBraces++;
+        if (char === '}') openBraces--;
+        if (char === '[') openBrackets++;
+        if (char === ']') openBrackets--;
+      }
+    }
+    
+    // Close remaining brackets
+    let fixedJSON = incompleteJSON;
+    while (openBraces > 0) {
+      fixedJSON += '}';
+      openBraces--;
+    }
+    
+    while (openBrackets > 0) {
+      fixedJSON += ']';
+      openBrackets--;
+    }
+    
+    // Try to parse the fixed JSON
+    JSON.parse(fixedJSON);
+    return fixedJSON;
+  } catch {
+    return null;
+  }
+};
+
+ const handleSubmit = async () => {
+  if (!ai) {
+    alert("API Key not found. Please check your API configuration.");
+    return;
+  }
+  
+  setSubmitted(true);
+  
+  const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give in below given json format  , our highest priority is JSON format response , please do not send any other except this json formate , please send medium hard questions : 
+  [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]`;
+
+  setParagraph('');
+
+  try {
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: "user", parts: [{ text: content }] }],
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: 5000,
+      }
+    });
+
+    console.log('Full API Response:', result);
+
+    // Extract text from the proper path
+    const resText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    console.log('Extracted text:', resText);
+    
+   if (resText) {
+  // Check if response was truncated
+  const finishReason = result?.candidates?.[0]?.finishReason;
+  
+  if (finishReason === 'MAX_TOKENS') {
+    // Response was truncated - need to handle incomplete JSON
+    console.warn('Response truncated due to token limit');
+    
+    // Try to extract and fix incomplete JSON
+    try {
+      // Remove markdown code blocks if present
+      let cleanedText = resText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+      
+      // Find the last complete JSON object
+      const jsonMatch = cleanedText.match(/\[[\s\S]*?\}\]/);
+      
+      if (jsonMatch) {
+        const potentialJSON = jsonMatch[0];
+        
+        // Try to parse it
+        try {
+          const jsn = JSON.parse(potentialJSON);
+          setQuestionArr(jsn);
+        } catch {
+          // If parsing fails, try to complete the JSON
+          const fixedJSON = fixIncompleteJSON(potentialJSON);
+          if (fixedJSON) {
+            const jsn = JSON.parse(fixedJSON);
+            setQuestionArr(jsn);
+          } else {
+            throw new Error('Could not fix incomplete JSON');
+          }
+        }
+      } else {
+        // No JSON found at all
+        setQuestionArr([{
+          question: "Response truncated. Please try with fewer questions or shorter content.",
+          options: { A: "Reduce MCQ count", B: "Shorter paragraph", C: "Try again", D: "Contact support" },
+          answer: "A"
+        }]);
+      }
+    } catch (error) {
+      setQuestionArr([{
+        question: "Incomplete response received. Try reducing the number of questions.",
+        options: { A: "Try with 3 MCQs", B: "Use shorter text", C: "Try again", D: "Contact support" },
+        answer: "A"
+      }]);
+    }
+  } else {
+    // Normal response processing
+    try {
+      // Remove markdown code blocks if present
+      let cleanedText = resText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+      
+      // Try to extract JSON from the response
+      const jsonMatch = cleanedText.match(/\[[\s\S]*\]/s);
+      
+      if (jsonMatch) {
+        const stringJSON = jsonMatch[0];
+        const jsn = JSON.parse(stringJSON);
+        setQuestionArr(jsn);
+      } else {
+        // If no JSON found, try to parse the whole response as JSON
+        try {
+          const jsn = JSON.parse(cleanedText);
+          setQuestionArr(jsn);
+        } catch {
+          setQuestionArr([{
+            question: "No valid JSON found in response",
+            options: { A: "Try again", B: "Check format", C: "Review content", D: "Contact support" },
+            answer: "A"
+          }]);
+        }
+      }
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      setQuestionArr([{
+        question: "JSON parsing failed: " + parseError.message,
+        options: { A: "Try again", B: "Check format", C: "Review API", D: "Contact support" },
+        answer: "B"
+      }]);
+    }
+  }
+}
+    
+  } catch (err) {
+    console.error("Gemini API Error:", err);
+    let errorMessage = "Failed to get response.";
+    
+    if (err.message.includes("429")) {
+      errorMessage = "API quota exceeded. Please try again later.";
+    } else if (err.message.includes("401") || err.message.includes("403")) {
+      errorMessage = "Invalid API key. Please check your API key.";
+    } else {
+      errorMessage = err.message || "An unknown error occurred.";
+    }
+    
+    setQuestionArr([{
+      question: "Error: " + errorMessage,
+      options: { A: "Try again", B: "Check connection", C: "Verify API key", D: "Contact support" },
+      answer: "C"
+    }]);
+  }
+};
 
   return (
     <div className={`flex items-center justify-center p-5 bg-gradient-to-r from-teal-500 via-indigo-600 to-purple-700 h-screen overflow-y-auto`}>
