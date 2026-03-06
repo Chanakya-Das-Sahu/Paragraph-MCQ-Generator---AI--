@@ -6,6 +6,10 @@ require('dotenv').config()
 app.use(cors());
 app.use(express.json());
 
+// app.get('/mew',(req,res)=>{
+//     res.({value:process.env.PASS})
+// })
+
 app.post('/htmlContent', (req, res) => {
 
    // console.log('mew',req.body)
