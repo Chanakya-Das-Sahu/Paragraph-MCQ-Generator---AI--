@@ -4,6 +4,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import getServerUrl from "../utils/getServerUrl";
+
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -124,7 +126,7 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
 </div>`;
 
     try {
-      const res = await axios.post("http://localhost:3000/htmlContent", {
+      const res = await axios.post(`${getServerUrl()}/htmlContent`, {
         htmlContent: html,
         gmail: gmail,
       });
