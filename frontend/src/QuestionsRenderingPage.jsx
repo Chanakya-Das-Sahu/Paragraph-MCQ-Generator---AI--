@@ -7,7 +7,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const Questions = ({ questionArr, changeSubmitted }) => {
+const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [gmail, setGmail] = useState("");
@@ -219,7 +219,7 @@ const Questions = ({ questionArr, changeSubmitted }) => {
           ))}
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2">
             <button
-              onClick={calculateResults}
+              onClick={()=>{window.scrollTo({ top: 0, behavior: 'smooth' });calculateResults()}}
               className="bg-[#111827] text-white py-4 px-12 rounded-2xl font-black text-lg shadow-2xl hover:bg-[#1F2937] active:scale-95 transition-all"
             >
               Finalize Answers
@@ -336,4 +336,4 @@ const Questions = ({ questionArr, changeSubmitted }) => {
   );
 };
 
-export default Questions;
+export default QuestionRenderingPage;

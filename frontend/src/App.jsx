@@ -1,7 +1,6 @@
-import React from "react";
 import {BrowserRouter, Routes, Route} from 'react-router-dom'
 import HomePage from "./home.jsx";
-import InnovativeForm from "./InnovativeForm.jsx";
+import RenderingComponent from "./RenderingComponent.jsx";
 // import QuestionPage from "./QuestionPage";
 const App = () => {
     return(
@@ -9,7 +8,7 @@ const App = () => {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<HomePage/>}/>
-                <Route path="/innovativeForm" element={<InnovativeForm/>}/>
+                <Route path="/innovativeForm" element={<RenderingComponent/>}/>
                 {/* <Route path="/questions" element={<QuestionPage/>}/> */}
             </Routes>
         </BrowserRouter>

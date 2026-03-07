@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Questions from './QuestionPage';
+import QuestionRenderingPage from './QuestionsRenderingPage';
 import loading from './loading.jpg';
 import { GoogleGenAI } from '@google/genai';
 
-const InnovativeForm = () => {
+const RenderingComponent = () => {
   // --- FUNCTIONALITY (PRESERVED EXACTLY) ---
   const apikey = import.meta.env.VITE_API_KEY;
   const ai = apikey ? new GoogleGenAI({ apiKey: apikey }) : null;
@@ -13,10 +13,10 @@ const InnovativeForm = () => {
   const [numOfMCQ, setNumOfMCQ] = useState(5);
   const [emptyParaAlert, setEmptyParaAlert] = useState(false);
   const [mcqAlert, setMcqAlert] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [topicSubmitted, setTopicSubmitted] = useState(false);
 
   const changeSubmitted = () => {
-    setSubmitted(false);
+    setTopicSubmitted(false);
     setQuestionArr([]);
     setParagraph('');
     setNumOfMCQ(5);
@@ -57,7 +57,7 @@ const InnovativeForm = () => {
 
   const handleSubmit = async () => {
     if (!ai) { alert("API Key not found."); return; }
-    setSubmitted(true);
+    setTopicSubmitted(true);
     const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give in below given json format  , our highest priority is JSON format response , please do not send any other except this json formate , please send medium hard questions : 
   [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]`;
 
@@ -87,11 +87,9 @@ const InnovativeForm = () => {
   };
 
   // --- NEW INNOVATIVE DESIGN ---
-  return (
-    <div className="min-h-screen bg-[#EEF2FF] flex items-center justify-center p-0 md:p-6 font-sans">
-      
-      {!submitted && (
-        <div className="w-full max-w-6xl h-screen md:h-[85vh] bg-white/70 backdrop-blur-xl rounded-none md:rounded-[2.5rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden border border-white">
+
+  const renderInputPannel = () =>(
+      <div className="w-full max-w-6xl h-screen md:h-[85vh] bg-white/70 backdrop-blur-xl rounded-none md:rounded-[2.5rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden ">
           
           {/* Left Panel: Brand & Instructions */}
           <div className="md:w-72 bg-[#1F2937] p-8 text-white flex flex-col justify-between border-r border-white/10">
@@ -148,27 +146,38 @@ const InnovativeForm = () => {
             </div>
           </div>
         </div>
-      )}
+  )
 
-      {/* LOADING STATE */}
-      {submitted && questionArr.length === 0 && (
-        <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300">
+  const renderLoadingInterface = ()=>(
+      <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300 ">
           <div className="relative">
             <div className="w-32 h-32 border-[10px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
             <img src={loading} className="absolute inset-0 m-auto w-20 h-20 rounded-2xl rotate-[-10deg]" alt="loading" />
           </div>
           <h2 className="text-2xl font-black text-[#1F2937] mt-10 tracking-tight italic">AI IS THINKING...</h2>
         </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-[#EEF2FF] flex items-center justify-center p-0 md:p-6 font-sans">
+      
+      {!topicSubmitted && 
+        renderInputPannel()
+      }
+
+      {/* LOADING STATE */}
+      {topicSubmitted && questionArr.length === 0 && (
+        renderLoadingInterface()
       )}
 
       {/* RESULTS */}
-      {submitted && questionArr.length > 0 && (
-        <div className="w-full max-w-5xl px-4 animate-in slide-in-from-bottom-12 duration-500">
-           <Questions questionArr={questionArr} changeSubmitted={changeSubmitted} />
+      {topicSubmitted && questionArr.length > 0 && (
+        <div className="w-full max-w-5xl px-4 animate-in slide-in-from-bottom-12 duration-500 ">
+           <QuestionRenderingPage questionArr={questionArr} changeSubmitted={changeSubmitted} />
         </div>
       )}
     </div>
   );
 };
 
-export default InnovativeForm;
+export default RenderingComponent;
