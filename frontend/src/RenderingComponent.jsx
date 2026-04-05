@@ -14,6 +14,7 @@ const RenderingComponent = () => {
   const [emptyParaAlert, setEmptyParaAlert] = useState(false);
   const [mcqAlert, setMcqAlert] = useState(false);
   const [topicSubmitted, setTopicSubmitted] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
 
   const changeSubmitted = () => {
     setTopicSubmitted(false);
@@ -56,36 +57,96 @@ const RenderingComponent = () => {
   };
 
   const handleSubmit = async () => {
-    if (!ai) { alert("API Key not found."); return; }
-    setTopicSubmitted(true);
-    const content = `${paragraph} , Get me ${numOfMCQ} MCQ questions from this given content in below given format and must give in below given json format  , our highest priority is JSON format response , please do not send any other except this json formate , please send medium hard questions : 
-  [ { question: "What is the capital of France?", options: { A: "Berlin", B: "Madrid", C: "Paris", D: "Rome", }, answer: "C", }, { question: "Which programming language is used for web development?", options: { A: "Python", B: "JavaScript", C: "C++", D: "Java", }, answer: "B", }]`;
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  console.log('Using API Key:', apiKey)
 
-    setParagraph(''); ``
-    try {
-      const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ role: "user", parts: [{ text: content }] }],
-        config: { temperature: 0.7, maxOutputTokens: 5000 }
-      });
-      const resText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (resText) {
-        const finishReason = result?.candidates?.[0]?.finishReason;
-        let cleanedText = resText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-        if (finishReason === 'MAX_TOKENS') {
-          const jsonMatch = cleanedText.match(/\[[\s\S]*?\}\]/);
-          if (jsonMatch) {
-            try { setQuestionArr(JSON.parse(jsonMatch[0])); } 
-            catch { const fixed = fixIncompleteJSON(jsonMatch[0]); if (fixed) setQuestionArr(JSON.parse(fixed)); }
+  if (!apiKey) {
+    alert("Groq API Key not found.");
+    return;
+  }
+
+  setTopicSubmitted(true);
+
+
+
+const content = `${paragraph}
+
+Task:
+Generate ${numOfMCQ} MCQ questions from the above content.
+
+IMPORTANT RULES:
+- ALWAYS return JSON
+- If content is meaningful → return MCQs
+- If content is NOT meaningful → return this JSON:
+
+[
+  {
+    "error": "The provided content is not suitable for generating questions. Please enter meaningful educational content."
+  }
+]
+
+Do NOT return plain text.
+
+JSON Format (valid case):
+[
+  {
+    "question": "What is the capital of France?",
+    "options": {
+      "A": "Berlin",
+      "B": "Madrid",
+      "C": "Paris",
+      "D": "Rome"
+    },
+    "answer": "C"
+  }
+]
+`;
+  setParagraph('');
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "user",
+            content: content
           }
-        } else {
-          const jsonMatch = cleanedText.match(/\[[\s\S]*\]/s);
-          setQuestionArr(JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText));
-        }
-      }
-    } catch (err) { setQuestionArr([{ question: "Error: " + err.message, options: { A: "Retry" }, answer: "A" }]); }
-  };
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        stream: false
+      })
+    });
 
+    const data = await res.json();
+
+    const resText = data?.choices?.[0]?.message?.content;
+    console.log('Raw Response Text:', resText);
+    if (resText) {
+      let cleanedText = resText
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*$/g, '');
+
+      const jsonMatch = cleanedText.match(/\[[\s\S]*\]/s);
+const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText);
+
+if (parsed[0]?.error) {
+  setShowDialog(true);
+} else {
+  setQuestionArr(parsed);
+}
+    }
+
+  } catch (err) {
+    setShowDialog(true);
+  }
+};
   // --- NEW INNOVATIVE DESIGN ---
 
   const renderInputPannel = () =>(
@@ -159,6 +220,7 @@ const RenderingComponent = () => {
   )
 
   return (
+    <>
     <div className="min-h-screen bg-[#EEF2FF] flex items-center justify-center p-0 md:p-6 font-sans">
       
       {!topicSubmitted && 
@@ -177,6 +239,32 @@ const RenderingComponent = () => {
         </div>
       )}
     </div>
+    {showDialog && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl text-center">
+      
+      <h2 className="text-lg font-bold mb-4 text-red-500">
+        Invalid Input
+      </h2>
+
+      <p className="text-gray-600 mb-6">
+        The provided content is not suitable for generating questions. Please enter meaningful educational content.
+      </p>
+
+      <button
+        onClick={() => {
+          setShowDialog(false);
+          changeSubmitted(); // reset form
+        }}
+        className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
+      >
+        Go Back
+      </button>
+
+    </div>
+  </div>
+)}
+    </>
   );
 };
 
