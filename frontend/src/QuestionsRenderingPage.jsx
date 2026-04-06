@@ -50,7 +50,7 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
             <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 30px; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px;">
                 <tr>
                     <td align="center" style="width: 33%;">
-                        <span style="display: block; font-size: 20px; font-weight: bold; color: #4F46E5;">${chart.right}</span>
+                        <span style="display: block; font-size: 20px; font-weight: bold; color: #00D100;">${chart.right}</span>
                         <span style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Correct</span>
                     </td>
                     <td align="center" style="width: 33%;">
@@ -156,7 +156,7 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
       datasets: [
         {
           data: [chart.right, chart.wrong, chart.notAnswered],
-          backgroundColor: ["#4F46E5", "#EF4444", "#E5E7EB"],
+          backgroundColor: ["#00D100", "#EF4444", "#E5E7EB"],
           borderWidth: 0,
         },
       ],
@@ -235,42 +235,61 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
             <h3 className="text-2xl font-black text-[#111827] mb-6 text-center">
               Your Performance
             </h3>
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-1 w-full max-w-[280px]">
-                <PieChart />
-              </div>
-              <div className="flex-1 space-y-4 w-full">
-                <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF]">
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                    Total Score
-                  </p>
-                  <p className="text-4xl font-black text-[#1F2937]">
-                    {chart.right}{" "}
-                    <span className="text-xl text-gray-400">
-                      / {questionArr.length}
-                    </span>
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-green-50 rounded-2xl">
-                    <p className="text-xs font-bold text-green-600 uppercase">
-                      Correct
-                    </p>
-                    <p className="text-xl font-bold text-green-700">
-                      {chart.right}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-red-50 rounded-2xl">
-                    <p className="text-xs font-bold text-red-600 uppercase">
-                      Wrong
-                    </p>
-                    <p className="text-xl font-bold text-red-700">
-                      {chart.wrong}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+<div className="flex flex-col md:flex-row items-center gap-8">
+  <div className="flex-1 w-full max-w-[280px]">
+    <PieChart />
+  </div>
+
+  <div className="flex-1 space-y-4 w-full">
+    {/* Total Score */}
+    <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF]">
+      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+        Total Score
+      </p>
+      <p className="text-4xl font-black text-[#1F2937]">
+        {chart.right}{" "}
+        <span className="text-xl text-gray-400">
+          / {questionArr.length}
+        </span>
+      </p>
+    </div>
+
+    {/* Stats */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      
+      {/* Correct */}
+      <div className="p-4 bg-green-50 rounded-2xl">
+        <p className="text-xs font-bold text-green-600 uppercase">
+          Correct
+        </p>
+        <p className="text-xl font-bold text-green-700">
+          {chart.right}
+        </p>
+      </div>
+
+      {/* Wrong */}
+      <div className="p-4 bg-red-50 rounded-2xl">
+        <p className="text-xs font-bold text-red-600 uppercase">
+          Wrong
+        </p>
+        <p className="text-xl font-bold text-red-700">
+          {chart.wrong}
+        </p>
+      </div>
+
+      {/* Skipped */}
+      <div className="p-4 bg-gray-50 rounded-2xl">
+        <p className="text-xs font-bold text-gray-600 uppercase">
+          Skipped
+        </p>
+        <p className="text-xl font-bold text-gray-700">
+          {chart.notAnswered}
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
           </div>
           <div className="space-y-4">
             <h4 className="text-lg font-bold text-[#111827] ml-2">
