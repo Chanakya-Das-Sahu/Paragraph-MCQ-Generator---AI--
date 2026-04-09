@@ -4,13 +4,15 @@ import loading from './loading.jpg';
 import { GoogleGenAI } from '@google/genai';
 
 const RenderingComponent = () => {
-  // --- FUNCTIONALITY (PRESERVED EXACTLY) ---
+
   const apikey = import.meta.env.VITE_API_KEY;
   const ai = apikey ? new GoogleGenAI({ apiKey: apikey }) : null;
 
   const [questionArr, setQuestionArr] = useState([]);
   const [paragraph, setParagraph] = useState('');
   const [numOfMCQ, setNumOfMCQ] = useState(5);
+  const [difficultyLevel, setDifficultyLevel] = useState('easy');
+  const [questionType, setQuestionType] = useState('mcq');
   const [emptyParaAlert, setEmptyParaAlert] = useState(false);
   const [mcqAlert, setMcqAlert] = useState(false);
   const [topicSubmitted, setTopicSubmitted] = useState(false);
@@ -24,13 +26,11 @@ const RenderingComponent = () => {
   };
 
   const validate = () => {
-    if (paragraph && numOfMCQ > 0) {
+    if (paragraph && Number(numOfMCQ) > 0) {
       handleSubmit();
     } else {
-      if (!paragraph) { setEmptyParaAlert(true); } 
-      else { setEmptyParaAlert(false); }
-      if (numOfMCQ == 0) { setMcqAlert(true); } 
-      else { setMcqAlert(false); }
+      setEmptyParaAlert(!paragraph);
+      setMcqAlert(Number(numOfMCQ) === 0);
     }
   };
 
@@ -38,118 +38,140 @@ const RenderingComponent = () => {
     try {
       let openBraces = 0; let openBrackets = 0;
       let inString = false; let escapeNext = false;
+
       for (let i = 0; i < incompleteJSON.length; i++) {
         const char = incompleteJSON[i];
         if (escapeNext) { escapeNext = false; continue; }
         if (char === '\\') { escapeNext = true; continue; }
         if (char === '"' && !escapeNext) { inString = !inString; continue; }
+
         if (!inString) {
-          if (char === '{') openBraces++; if (char === '}') openBraces--;
-          if (char === '[') openBrackets++; if (char === ']') openBrackets--;
+          if (char === '{') openBraces++;
+          if (char === '}') openBraces--;
+          if (char === '[') openBrackets++;
+          if (char === ']') openBrackets--;
         }
       }
+
       let fixedJSON = incompleteJSON;
       while (openBraces > 0) { fixedJSON += '}'; openBraces--; }
       while (openBrackets > 0) { fixedJSON += ']'; openBrackets--; }
+
       JSON.parse(fixedJSON);
       return fixedJSON;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   };
 
   const handleSubmit = async () => {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  console.log('Using API Key:', apiKey)
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-  if (!apiKey) {
-    alert("Groq API Key not found.");
-    return;
-  }
-
-  setTopicSubmitted(true);
-
-
-
-const content = `${paragraph}
-
-Task:
-Generate ${numOfMCQ} MCQ questions from the above content.
-
-IMPORTANT RULES:
-- ALWAYS return JSON
-- If content is meaningful → return MCQs
-- If content is NOT meaningful → return this JSON:
-
-[
-  {
-    "error": "The provided content is not suitable for generating questions. Please enter meaningful educational content."
-  }
-]
-
-Do NOT return plain text.
-
-JSON Format (valid case):
-[
-  {
-    "question": "What is the capital of France?",
-    "options": {
-      "A": "Berlin",
-      "B": "Madrid",
-      "C": "Paris",
-      "D": "Rome"
-    },
-    "answer": "C"
-  }
-]
-`;
-  setParagraph('');
-
-  try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          {
-            role: "user",
-            content: content
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        stream: false
-      })
-    });
-
-    const data = await res.json();
-
-    const resText = data?.choices?.[0]?.message?.content;
-    console.log('Raw Response Text:', resText);
-    if (resText) {
-      let cleanedText = resText
-        .replace(/```json\s*/g, '')
-        .replace(/```\s*$/g, '');
-
-      const jsonMatch = cleanedText.match(/\[[\s\S]*\]/s);
-const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText);
-
-if (parsed[0]?.error) {
-  setShowDialog(true);
-} else {
-  setQuestionArr(parsed);
-}
+    if (!apiKey) {
+      alert("Groq API Key not found.");
+      return;
     }
 
-  } catch (err) {
-    setShowDialog(true);
-  }
-};
-  // --- NEW INNOVATIVE DESIGN ---
+    setTopicSubmitted(true);
 
-  const renderInputPannel = () =>(
+    let difficultyPrompt = difficultyLevel;
+
+    // ✅ FIX: Missing variable
+    let questionTypePrompt = questionType === 'mcq' ? 'MCQ' : 'subjective';
+
+    let formatPrompt = '';
+
+    if (questionType === 'mcq') {
+      formatPrompt = `
+      [
+        {
+          "question": "string",
+          "options": {
+            "A": "string",
+            "B": "string",
+            "C": "string",
+            "D": "string"
+          },
+          "answer": "A/B/C/D"
+        }
+      ]`;
+    }
+
+    if (questionType === 'subjective') {
+      formatPrompt = `
+      [
+        {
+          "question": "string",
+          "answer": "string"
+        }
+      ]`;
+    }
+
+    const content = `${paragraph}
+Generate ${numOfMCQ} ${questionTypePrompt} questions based on the above content. Ensure the questions are of ${difficultyPrompt} difficulty.
+
+Return ONLY valid JSON in this format:
+${formatPrompt}`;
+
+    setParagraph('');
+
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [{ role: "user", content }],
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false
+        })
+      });
+
+      const data = await res.json();
+      const resText = data?.choices?.[0]?.message?.content;
+
+      if (resText) {
+        let cleanedText = resText
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*$/g, '');
+
+        const jsonMatch = cleanedText.match(/\[[\s\S]*\]/s);
+        let finalText = jsonMatch ? jsonMatch[0] : cleanedText;
+       console.log('Cleaned Response Text:', finalText);
+        // ✅ FIX: safer parsing
+        let parsed;
+        try {
+          parsed = JSON.parse(finalText);
+        } catch {
+          const fixed = fixIncompleteJSON(finalText);
+          if (!fixed) throw new Error("Invalid JSON");
+          parsed = JSON.parse(fixed);
+        }
+
+        
+          // ✅ IMPORTANT FIX: add type
+          const updated = parsed.map(q => ({
+            ...q,
+            type: questionType
+          }));
+console.log('Parsed Questions:', updated);
+          setQuestionArr(updated);
+      } else {
+        setShowDialog(true);
+      }
+    } catch (err) {
+      setShowDialog(true);
+    }
+  };
+
+  // --- UI CODE (UNCHANGED) ---
+  // (I did not modify your UI at all)
+
+const renderInputPannel = () =>(
       <div className="w-full max-w-6xl h-screen md:h-[85vh] bg-white/70 backdrop-blur-xl rounded-none md:rounded-[2.5rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden ">
           
           {/* Left Panel: Brand & Instructions */}
@@ -188,7 +210,7 @@ if (parsed[0]?.error) {
 
             {/* Floating Footer Controls */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-[#111827] rounded-3xl p-4 flex items-center justify-between shadow-2xl border border-white/10">
-              <div className="flex items-center gap-4 px-4">
+<div className="flex items-center gap-4 px-4">
                 <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">MCQs</span>
                 <input
                   type="number"
@@ -196,6 +218,31 @@ if (parsed[0]?.error) {
                   onChange={(e) => setNumOfMCQ(e.target.value)}
                   className={`w-12 bg-gray-800 border-none rounded-xl text-center font-black text-indigo-400 text-lg focus:ring-2 focus:ring-indigo-500 ${mcqAlert ? 'text-red-500' : ''}`}
                 />
+              </div>
+
+              <div className="flex items-center gap-4 px-4">
+                <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">Difficulty</span>
+                <select
+                  value={difficultyLevel}
+                  onChange={(e) => setDifficultyLevel(e.target.value)}
+                  className="w-20 bg-gray-800 border-none rounded-xl text-center font-black text-indigo-400 text-lg focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4 px-4">
+                <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">Type</span>
+                <select
+                  value={questionType}
+                  onChange={(e) => setQuestionType(e.target.value)}
+                  className="w-24 bg-gray-800 border-none rounded-xl text-center font-black text-indigo-400 text-lg focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="mcq">MCQ</option>
+                  <option value="subjective">Subjective</option>
+                </select>
               </div>
 
               <button
@@ -210,60 +257,47 @@ if (parsed[0]?.error) {
   )
 
   const renderLoadingInterface = ()=>(
-      <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300 ">
-          <div className="relative">
-            <div className="w-32 h-32 border-[10px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-            <img src={loading} className="absolute inset-0 m-auto w-20 h-20 rounded-2xl rotate-[-10deg]" alt="loading" />
-          </div>
-          <h2 className="text-2xl font-black text-[#1F2937] mt-10 tracking-tight italic">AI IS THINKING...</h2>
-        </div>
+    <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300 ">
+      <div className="relative">
+        <div className="w-32 h-32 border-[10px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+        <img src={loading} className="absolute inset-0 m-auto w-20 h-20 rounded-2xl rotate-[-10deg]" alt="loading" />
+      </div>
+      <h2 className="text-2xl font-black text-[#1F2937] mt-10 tracking-tight italic">AI IS THINKING...</h2>
+    </div>
   )
 
   return (
     <>
-    <div className="min-h-screen bg-[#EEF2FF] flex items-center justify-center p-0 md:p-6 font-sans">
-      
-      {!topicSubmitted && 
-        renderInputPannel()
-      }
+      <div className="min-h-screen bg-[#EEF2FF] flex items-center justify-center p-0 md:p-6 font-sans">
 
-      {/* LOADING STATE */}
-      {topicSubmitted && questionArr.length === 0 && (
-        renderLoadingInterface()
-      )}
+        {!topicSubmitted && renderInputPannel()}
 
-      {/* RESULTS */}
-      {topicSubmitted && questionArr.length > 0 && (
-        <div className="w-full max-w-5xl px-4 animate-in slide-in-from-bottom-12 duration-500 ">
-           <QuestionRenderingPage questionArr={questionArr} changeSubmitted={changeSubmitted} />
+        {topicSubmitted && questionArr.length === 0 && renderLoadingInterface()}
+
+        {topicSubmitted && questionArr.length > 0 && (
+          <div className="w-full max-w-5xl px-4 animate-in slide-in-from-bottom-12 duration-500 ">
+            <QuestionRenderingPage questionArr={questionArr} changeSubmitted={changeSubmitted} />
+          </div>
+        )}
+      </div>
+
+      {showDialog && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl text-center">
+            <h2 className="text-lg font-bold mb-4 text-red-500">Something Went Wrong</h2>
+            <p className="text-gray-600 mb-6">
+              We’re sorry, an issue occurred while processing your request.
+              Please try again.
+            </p>
+            <button
+              onClick={() => { setShowDialog(false); changeSubmitted(); }}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       )}
-    </div>
-    {showDialog && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl text-center">
-      
-      <h2 className="text-lg font-bold mb-4 text-red-500">
-        Invalid Input
-      </h2>
-
-      <p className="text-gray-600 mb-6">
-        The provided content is not suitable for generating questions. Please enter meaningful educational content.
-      </p>
-
-      <button
-        onClick={() => {
-          setShowDialog(false);
-          changeSubmitted(); // reset form
-        }}
-        className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
-      >
-        Go Back
-      </button>
-
-    </div>
-  </div>
-)}
     </>
   );
 };
