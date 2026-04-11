@@ -704,9 +704,11 @@ ${JSON.stringify(payload)}
                 <h1 className="text-3xl font-black text-[#111827]">
                   Knowledge Check
                 </h1>
-                <p className="text-gray-500 font-medium">
+                {!isAllSubjective ? <p className="text-gray-500 font-medium">
                   Select the best answer for each question.
-                </p>
+                </p> : <p className="text-gray-500 font-medium">
+                  Answer the following questions correctly.
+                </p>}
               </div>
 
               {questionArr.map((q, i) => (
