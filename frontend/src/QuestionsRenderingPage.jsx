@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,6 +16,81 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
+
+// Memoized PieChart Component
+const PieChart = React.memo(({ chart, isChatOpen, isFullScreen }) => {
+  const chartRef = useRef(null);
+  
+  const options = useMemo(() => ({
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: { color: "#4B5563", font: { weight: "600" } },
+      },
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+  }), []);
+
+  const data = useMemo(() => ({
+    labels: ["Correct", "Wrong", "Skipped"],
+    datasets: [
+      {
+        data: [chart.right, chart.wrong, chart.notAnswered],
+        backgroundColor: ["#00D100", "#EF4444", "#E5E7EB"],
+        borderWidth: 0,
+      },
+    ],
+  }), [chart.right, chart.wrong, chart.notAnswered]);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      const timer = setTimeout(() => {
+        if (chartRef.current && chartRef.current.chartInstance) {
+          chartRef.current.chartInstance.resize();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isChatOpen, isFullScreen]);
+
+  return (
+    <div className={`${!isFullScreen && isChatOpen ? 'h-48' : 'h-64'} w-full transition-all duration-300`}>
+      <Pie ref={chartRef} data={data} options={options} />
+    </div>
+  );
+});
+
+// Memoized CircularScore Component
+const CircularScore = React.memo(({ percentage }) => {
+  const chartRef = useRef(null);
+  
+  const data = useMemo(() => ({
+    datasets: [
+      {
+        data: [percentage, 100 - percentage],
+        backgroundColor: ["#4F46E5", "#E5E7EB"],
+        borderWidth: 0,
+        cutout: "75%",
+      },
+    ],
+  }), [percentage]);
+
+  const options = useMemo(() => ({
+    plugins: { tooltip: { enabled: false } },
+    responsive: true,
+    maintainAspectRatio: true,
+  }), []);
+
+  return (
+    <div className="relative h-40 w-40">
+      <Doughnut ref={chartRef} data={data} options={options} />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-2xl font-black">{percentage}%</span>
+      </div>
+    </div>
+  );
+});
 
 const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -39,17 +114,16 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
   const chatInputRef = useRef(null);
   const chatContainerRef = useRef(null);
 
-  const handleOptionChange = (i, option) => {
-    setSelectedAnswers({ ...selectedAnswers, [i]: option });
-  };
+  const handleOptionChange = useCallback((i, option) => {
+    setSelectedAnswers(prev => ({ ...prev, [i]: option }));
+  }, []);
 
-  const handleSubjectiveChange = (i, val) => {
-    setSubjectiveAnswers({ ...subjectiveAnswers, [i]: val });
-  };
+  const handleSubjectiveChange = useCallback((i, val) => {
+    setSubjectiveAnswers(prev => ({ ...prev, [i]: val }));
+  }, []);
 
   // Check if all questions are subjective
   const isAllSubjective = questionArr.every(q => q.type !== "mcq");
-  const hasMixedQuestions = questionArr.some(q => q.type === "mcq") && questionArr.some(q => q.type !== "mcq");
 
   // Handle scroll event for chat container
   useEffect(() => {
@@ -85,65 +159,27 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
     }
   }, [isChatOpen]);
 
-  // Force chart resize when sidebar opens/closes
-  useEffect(() => {
-    if (isChatOpen && showResults) {
-      // Small delay to allow DOM to update with new layout
-      setTimeout(() => {
-        if (ChartJS && ChartJS.instances) {
-          Object.values(ChartJS.instances).forEach(chart => {
-            if (chart && typeof chart.resize === 'function') {
-              chart.resize();
-            }
-          });
-        }
-      }, 200); // Increased delay to ensure DOM has fully updated
-    } else if (!isChatOpen && showResults) {
-      // Resize when sidebar closes too
-      setTimeout(() => {
-        if (ChartJS && ChartJS.instances) {
-          Object.values(ChartJS.instances).forEach(chart => {
-            if (chart && typeof chart.resize === 'function') {
-              chart.resize();
-            }
-          });
-        }
-      }, 200);
-    }
-  }, [isChatOpen, showResults]);
-
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (chatMessagesEndRef.current) {
       chatMessagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, []);
 
   // ================= CHATBOT FUNCTIONS =================
-  const toggleQuestionSelection = (index) => {
+  const toggleQuestionSelection = useCallback((index) => {
     if (selectedQuestionIndex === index) {
       setSelectedQuestionIndex(null);
       toast.info("Question deselected");
     } else {
       setSelectedQuestionIndex(index);
       toast.success(`Question ${index + 1} selected`);
-      // Force setIsChatOpen to true if it's not already
       if (!isChatOpen) {
         setIsChatOpen(true);
-        // Force chart resize after sidebar opens
-        setTimeout(() => {
-          if (ChartJS && ChartJS.instances && showResults) {
-            Object.values(ChartJS.instances).forEach(chart => {
-              if (chart && typeof chart.resize === 'function') {
-                chart.resize();
-              }
-            });
-          }
-        }, 250);
       }
     }
-  };
+  }, [selectedQuestionIndex, isChatOpen]);
 
-  const buildChatContext = () => {
+  const buildChatContext = useCallback(() => {
     let context = "Available Questions and Content:\n\n";
 
     questionArr.forEach((q, i) => {
@@ -169,17 +205,20 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
     }
 
     return context;
-  };
+  }, [questionArr, selectedQuestionIndex]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!chatInput.trim()) return;
 
     const userMessage = chatInput.trim();
     setChatInput("");
 
-    // Add user message to chat
     setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
     setIsChatLoading(true);
+    
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
 
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -231,6 +270,10 @@ Current selected question: ${selectedQuestionIndex !== null ? `Q${selectedQuesti
       const aiResponse = data?.choices?.[0]?.message?.content || "Sorry, I couldn't process that request.";
 
       setChatMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
+      
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     } catch (error) {
       console.error("Chat error:", error);
       setChatMessages(prev => [...prev, {
@@ -238,17 +281,21 @@ Current selected question: ${selectedQuestionIndex !== null ? `Q${selectedQuesti
         content: "Sorry, I encountered an error. Please try again."
       }]);
       toast.error("Failed to get response");
+      
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     } finally {
       setIsChatLoading(false);
     }
-  };
+  }, [chatInput, chatMessages, selectedQuestionIndex, questionArr, buildChatContext, scrollToBottom]);
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
 
   // ================= RESULT =================
   const calculateResults = async () => {
@@ -356,8 +403,7 @@ ${JSON.stringify(payload)}
   };
 
   //  html content for mcq and subjective results
-
-  const generateMCQHtml = () => {
+  const generateMCQHtml = useCallback(() => {
     return `
 <div style="background-color: #f4f7ff; padding: 20px; font-family: 'Segoe UI', Tahoma, sans-serif;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
@@ -398,18 +444,17 @@ ${JSON.stringify(payload)}
             ? item.options[userSelectionKey]
             : "Not Answered";
 
-          // --- DYNAMIC STYLING LOGIC ---
-          let bgColor = "#f9fafb"; // Default Gray for Skipped
+          let bgColor = "#f9fafb";
           let borderColor = "#d1d5db";
           let statusIcon = "⚪";
 
           if (isAnswered) {
             if (isCorrect) {
-              bgColor = "#f0fdf4"; // Green
+              bgColor = "#f0fdf4";
               borderColor = "#22c55e";
               statusIcon = "✅";
             } else {
-              bgColor = "#fef2f2"; // Red
+              bgColor = "#fef2f2";
               borderColor = "#ef4444";
               statusIcon = "❌";
             }
@@ -444,9 +489,9 @@ ${JSON.stringify(payload)}
         </div>
     </div>
 </div>`;
-  };
+  }, [chart, questionArr, selectedAnswers]);
 
-  const generateSubjectiveHtml = () => {
+  const generateSubjectiveHtml = useCallback(() => {
     return `
 <div style="background-color:#f4f7ff;padding:20px;font-family:Segoe UI;">
   <div style="max-width:600px;margin:auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.05);">
@@ -458,7 +503,6 @@ ${JSON.stringify(payload)}
 
     <div style="padding:20px;">
       
-      <!-- Overall Score -->
       ${aiInsights?.overall
         ? `
         <div style="text-align:center;margin-bottom:20px;">
@@ -522,7 +566,7 @@ ${JSON.stringify(payload)}
   </div>
 </div>
 `;
-  };
+  }, [aiInsights, questionArr, subjectiveAnswers]);
 
   // ================= EMAIL =================
   const generateHtmlContent = async () => {
@@ -554,57 +598,6 @@ ${JSON.stringify(payload)}
     setSending(false);
   };
 
-  // --- CHART COMPONENT ---
-  const PieChart = () => {
-    const options = {
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { color: "#4B5563", font: { weight: "600" } },
-        },
-      },
-      maintainAspectRatio: false,
-    };
-
-    const data = {
-      labels: ["Correct", "Wrong", "Skipped"],
-      datasets: [
-        {
-          data: [chart.right, chart.wrong, chart.notAnswered],
-          backgroundColor: ["#00D100", "#EF4444", "#E5E7EB"],
-          borderWidth: 0,
-        },
-      ],
-    };
-    return (
-      <div className={`${!isFullScreen && isChatOpen ? 'h-48' : 'h-64'} w-full transition-all duration-300`}>
-        <Pie data={data} options={options} />
-      </div>
-    );
-  };
-
-  // ================= SUBJECTIVE CIRCLE =================
-  const CircularScore = ({ percentage }) => (
-    <div className="relative h-40 w-40">
-      <Doughnut
-        data={{
-          datasets: [
-            {
-              data: [percentage, 100 - percentage],
-              backgroundColor: ["#4F46E5", "#E5E7EB"],
-              borderWidth: 0,
-              cutout: "75%",
-            },
-          ],
-        }}
-        options={{ plugins: { tooltip: { enabled: false } } }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-black">{percentage}%</span>
-      </div>
-    </div>
-  );
-
   // Loading Animation Component
   const LoadingAnimation = () => (
     <div className="fixed inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center z-50">
@@ -630,7 +623,7 @@ ${JSON.stringify(payload)}
   );
 
   // Markdown Component for Chat Messages
-  const MarkdownMessage = ({ content }) => (
+  const MarkdownMessage = React.memo(({ content }) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
@@ -685,21 +678,28 @@ ${JSON.stringify(payload)}
     >
       {content}
     </ReactMarkdown>
-  );
+  ));
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500 relative">
+    <div className={`w-full  animate-in fade-in duration-500 relative
+     `}>
       <ToastContainer />
 
       {isLoadingAI && <LoadingAnimation />}
 
-      <div className="flex gap-6">
-        {/* Main Content Area */}
-        <div className={`flex-1 transition-all duration-300 ${!isFullScreen && isChatOpen ? 'lg:mr-[420px]' : ''
-          } ${isFullScreen ? 'hidden' : ''}`}>
+      <div className={`flex w-full transition-all duration-300 ${
+            !isFullScreen && isChatOpen ? 'lg:mr-[420px] -ml-20 ' : 'mx-auto'
+          } `}style={{ maxWidth: isChatOpen && !isFullScreen ? 'calc(100% - 200px)' : '100%' }}>
+        {/* Main Content Area - FIXED WIDTH ISSUE */}
+        <div 
+          className={`flex-1 transition-all duration-300 ${
+            !isFullScreen && isChatOpen ? '-ml-[60px] ' : 'mx-auto'
+          } ${isFullScreen ? 'hidden' : ''}`} 
+         >
+          <div className="w-full px-4 md:px-6 lg:px-8">
           {!showResults ? (
             // ================= QUIZ UI =================
-            <div className="space-y-6 pb-20">
+            <div className="space-y-6 pb-20 w-full">
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-black text-[#111827]">
                   Knowledge Check
@@ -714,7 +714,7 @@ ${JSON.stringify(payload)}
               {questionArr.map((q, i) => (
                 <div
                   key={i}
-                  className={`bg-white border transition-all duration-200 p-6 rounded-3xl shadow-sm hover:shadow-md ${selectedQuestionIndex === i
+                  className={`bg-white border transition-all duration-200 p-6 rounded-3xl shadow-sm hover:shadow-md w-full ${selectedQuestionIndex === i
                       ? 'border-[#4F46E5] ring-4 ring-indigo-500/10'
                       : 'border-[#E0E7FF]'
                     }`}
@@ -741,11 +741,11 @@ ${JSON.stringify(payload)}
                   </div>
 
                   {q.type === "mcq" ? (
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 gap-3 w-full">
                       {Object.entries(q.options).map(([key, value]) => (
                         <label
                           key={key}
-                          className={`group flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all 
+                          className={`group flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all w-full
                           ${selectedAnswers[i] === key
                               ? "border-[#4F46E5] bg-[#EEF2FF]"
                               : "border-[#F3F4F6] hover:border-[#E0E7FF] hover:bg-[#F9FAFB]"
@@ -792,22 +792,22 @@ ${JSON.stringify(payload)}
             </div>
           ) : (
             // ================= RESULTS UI =================
-            <div className="space-y-8 pb-20">
+            <div className="space-y-8 pb-20 w-full">
               {/* Only show pie chart and stats for non-subjective questions */}
               {!isAllSubjective && (
-                <div className="bg-white rounded-[2.5rem] border p-8 shadow-xl">
+                <div className="bg-white rounded-[2.5rem] border p-4 md:p-8 shadow-xl w-full">
                   <h3 className="text-2xl font-black text-center mb-6">
                     Your Performance
                   </h3>
 
-                  <div className={`flex ${!isFullScreen && isChatOpen ? 'flex-col' : 'flex-col md:flex-row'} items-center gap-8`}>
+                  <div className={`flex ${!isFullScreen && isChatOpen ? 'flex-col' : 'flex-col md:flex-row'} items-center gap-8 w-full`}>
                     <div className={`${!isFullScreen && isChatOpen ? 'w-full' : 'flex-1 w-full max-w-[280px]'}`}>
-                      <PieChart />
+                      <PieChart chart={chart} isChatOpen={isChatOpen} isFullScreen={isFullScreen} />
                     </div>
 
                     <div className="flex-1 space-y-4 w-full">
                       {/* Total Score */}
-                      <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF]">
+                      <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF] w-full">
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
                           Total Score
                         </p>
@@ -820,7 +820,7 @@ ${JSON.stringify(payload)}
                       </div>
 
                       {/* Stats */}
-                      <div className={`grid ${!isFullScreen && isChatOpen ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'} gap-4`}>
+                      <div className={`grid ${!isFullScreen && isChatOpen ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'} gap-4 w-full`}>
                         {/* Correct */}
                         <div className="p-4 bg-green-50 rounded-2xl">
                           <p className="text-xs font-bold text-green-600 uppercase">
@@ -858,7 +858,7 @@ ${JSON.stringify(payload)}
 
               {/* Show doughnut chart for subjective overall score */}
               {aiInsights?.overall && (
-                <div className="bg-white p-8 rounded-3xl shadow-xl text-center flex flex-col justify-center items-center">
+                <div className="bg-white p-4 md:p-8 rounded-3xl shadow-xl text-center flex flex-col justify-center items-center w-full">
                   <h2 className="text-2xl font-bold mb-4">
                     Overall Performance Score
                   </h2>
@@ -872,7 +872,7 @@ ${JSON.stringify(payload)}
               )}
 
               {/* ===== REVIEW SECTION ===== */}
-              <div className="bg-white rounded-3xl border p-6 shadow-sm">
+              <div className="bg-white rounded-3xl border p-4 md:p-6 shadow-sm w-full">
                 <h3 className="text-xl font-bold mb-6">Detailed Review</h3>
 
                 {questionArr.map((q, i) => {
@@ -885,13 +885,13 @@ ${JSON.stringify(payload)}
                       key={i}
                       className={
                         isMCQ
-                          ? `p-6 rounded-3xl border-2 my-3 ${skipped
+                          ? `p-4 md:p-6 rounded-3xl border-2 my-3 w-full ${skipped
                             ? "bg-gray-50 border-gray-200"
                             : isCorrect
                               ? "bg-white border-green-200"
                               : "bg-white border-red-200"
                           }`
-                          : "bg-gray-50 p-5 rounded-2xl border my-4"
+                          : "bg-gray-50 p-4 md:p-5 rounded-2xl border my-4 w-full"
                       }
                     >
                       <div className="flex items-start gap-4 mb-2">
@@ -957,7 +957,7 @@ ${JSON.stringify(payload)}
               </div>
 
               {/* EMAIL SECTION */}
-              <div className="bg-[#111827] p-8 rounded-[2rem] text-white space-y-6 shadow-2xl">
+              <div className="bg-[#111827] p-4 md:p-8 rounded-[2rem] text-white space-y-6 shadow-2xl w-full">
                 <h4 className="text-center font-bold text-indigo-300 uppercase tracking-widest text-sm">
                   Save your report
                 </h4>
@@ -986,26 +986,13 @@ ${JSON.stringify(payload)}
               </div>
             </div>
           )}
+          </div>
         </div>
 
         {/* Chatbot Sidebar Toggle Button */}
         {!isFullScreen && (
           <button
-            onClick={() => {
-              setIsChatOpen(!isChatOpen);
-              // Force chart resize after sidebar state changes
-              if (!isChatOpen && showResults) {
-                setTimeout(() => {
-                  if (ChartJS && ChartJS.instances) {
-                    Object.values(ChartJS.instances).forEach(chart => {
-                      if (chart && typeof chart.resize === 'function') {
-                        chart.resize();
-                      }
-                    });
-                  }
-                }, 250);
-              }
-            }}
+            onClick={() => setIsChatOpen(!isChatOpen)}
             className={`fixed bottom-6 right-6 z-40 bg-[#4F46E5] hover:bg-[#6366F1] text-white p-4 rounded-full shadow-2xl transition-all duration-300 ${isChatOpen ? 'scale-0' : 'scale-100'
               }`}
           >
@@ -1139,7 +1126,7 @@ ${JSON.stringify(payload)}
             {showScrollButton && (
               <button
                 onClick={scrollToBottom}
-                className="sticky bottom-4 left-1/2 -translate-x-1/2 bg-[#4F46E5] text-white p-3 rounded-full shadow-lg hover:bg-[#6366F1] transition-all z-10 animate-bounce"
+                className="sticky bottom-4 left-1/2 -translate-x-1/2 bg-[#4F46E5] text-white p-3 rounded-full shadow-lg hover:bg-[#6366F1] transition-all z-10"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
