@@ -171,35 +171,37 @@ ${formatPrompt}`;
   // --- UI CODE (UNCHANGED) ---
   // (I did not modify your UI at all)
 
-  const renderInputPannel = () => (
-    <div className="w-full max-w-6xl h-screen md:h-[85vh] bg-white/70 backdrop-blur-xl rounded-none md:rounded-[2.5rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden ">
+const renderInputPannel = () => (
+  <div className="w-full max-w-6xl h-screen md:h-[85vh] bg-white/70 backdrop-blur-xl rounded-none md:rounded-[2.5rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden">
 
-      {/* Left Panel: Brand & Instructions */}
-      <div className="md:w-72 bg-[#1F2937] p-8 text-white flex flex-col justify-between border-r border-white/10">
-        <div>
-          <div className="bg-[#4F46E5] w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg mb-8 shadow-indigo-500/40">
-            <img src={loading} className="w-8 h-8 rounded-lg" alt="logo" />
-          </div>
-       <h2 className="text-xl font-black tracking-tight mb-4">Quiz Engine</h2>
-<ul className="space-y-4 text-xs font-medium text-gray-400">
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">1</span> Paste your raw text</li>
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">2</span> Choose question count & type</li>
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">3</span> AI generates quiz</li>
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">4</span> Answer & get AI insights</li>
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">5</span> Chat with AI about questions</li>
-  <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">6</span> Email your detailed report</li>
-</ul>
+    {/* Left Panel: Brand & Instructions */}
+    <div className="md:w-72 bg-[#1F2937] p-8 text-white flex flex-col justify-between border-r border-white/10">
+      <div>
+        <div className="bg-[#4F46E5] w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg mb-8 shadow-indigo-500/40">
+          <img src={loading} className="w-8 h-8 rounded-lg" alt="logo" />
         </div>
-        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Secure AI Processing</div>
+        <h2 className="text-xl font-black tracking-tight mb-4">Quiz Engine</h2>
+        <ul className="space-y-4 text-xs font-medium text-gray-400">
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">1</span> Paste your raw text</li>
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">2</span> Choose question count & type</li>
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">3</span> AI generates quiz</li>
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">4</span> Answer & get AI insights</li>
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">5</span> Chat with AI about questions</li>
+          <li className="flex items-center gap-3"><span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center italic">6</span> Email your detailed report</li>
+        </ul>
       </div>
+      <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Secure AI Processing</div>
+    </div>
 
-      {/* Right Panel: Workspace */}
-      <div className="flex-1 flex flex-col relative bg-[#F9FAFB]/50">
-        <div className="p-6 md:p-10 flex-1 overflow-y-auto pb-8 sm:pb-48 md:pb-36">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-black text-[#111827] mb-2">Workspace</h1>
-            <p className="text-gray-500 mb-8 font-medium">Input your paragraph to extract knowledge.</p>
+    {/* Right Panel: Workspace */}
+    <div className="flex-1 flex flex-col relative bg-[#F9FAFB]/50">
+      <div className="p-6 md:p-10 flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-black text-[#111827] mb-2">Workspace</h1>
+          <p className="text-gray-500 mb-8 font-medium">Input your paragraph to extract knowledge.</p>
 
+          {/* Input Section with Integrated Desktop Controls */}
+          <div className="h-[80vh]">
             <textarea
               onChange={(e) => setParagraph(e.target.value)}
               value={paragraph}
@@ -207,94 +209,121 @@ ${formatPrompt}`;
                     ${emptyParaAlert ? 'border-red-400 ring-4 ring-red-500/10' : 'border-[#E0E7FF] focus:border-[#4F46E5] focus:ring-4 focus:ring-indigo-500/5'}`}
               placeholder="The magic starts here..."
             />
-            {emptyParaAlert && <p className="text-red-500 text-xs font-bold mt-4 uppercase tracking-widest animate-pulse">Required Field</p>}
+            
+            {/* Desktop Controls - Inside the textarea container */}
+            <div className="hidden md:block absolute bottom-4 left-4 right-4">
+              <div className="bg-[#111827] rounded-2xl p-3 shadow-xl border border-white/10">
+                <div className="flex flex-row items-center justify-between gap-3">
+                  {/* MCQ Count */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">MCQs</span>
+                    <input
+                      type="number"
+                      value={numOfMCQ}
+                      onChange={(e) => setNumOfMCQ(e.target.value)}
+                      min="1"
+                      max="20"
+                      className={`w-16 bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-base focus:ring-2 focus:ring-indigo-500 py-1.5 ${
+                        mcqAlert ? "text-red-500" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {/* Difficulty */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">Difficulty</span>
+                    <select
+                      value={difficultyLevel}
+                      onChange={(e) => setDifficultyLevel(e.target.value)}
+                      className="w-28 bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-sm focus:ring-2 focus:ring-indigo-500 py-1.5"
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+
+                  {/* Type */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-xs font-black uppercase tracking-tighter">Type</span>
+                    <select
+                      value={questionType}
+                      onChange={(e) => setQuestionType(e.target.value)}
+                      className="w-32 bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-sm focus:ring-2 focus:ring-indigo-500 py-1.5"
+                    >
+                      <option value="mcq">MCQ</option>
+                      <option value="subjective">Subjective</option>
+                    </select>
+                  </div>
+
+                  {/* Generate Button */}
+                  <button
+                    onClick={validate}
+                    className="bg-[#4F46E5] hover:bg-[#6366F1] text-white px-8 py-2 rounded-xl font-black text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-indigo-500/20 whitespace-nowrap"
+                  >
+                    Generate
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {emptyParaAlert && <p className="text-red-500 text-xs font-bold mt-4 uppercase tracking-widest animate-pulse">Required Field</p>}
+        </div>
+      </div>
+
+      {/* Mobile Floating Footer Controls - Only visible on mobile */}
+      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-[#111827] rounded-t-2xl p-3 shadow-2xl border border-white/10 z-50">
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-400 text-[10px] font-black uppercase tracking-tighter">MCQs</span>
+              <input
+                type="number"
+                value={numOfMCQ}
+                onChange={(e) => setNumOfMCQ(e.target.value)}
+                min="1"
+                max="20"
+                className={`w-full bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-base focus:ring-2 focus:ring-indigo-500 py-2 ${mcqAlert ? "text-red-500" : ""}`}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-400 text-[10px] font-black uppercase tracking-tighter">Difficulty</span>
+              <select
+                value={difficultyLevel}
+                onChange={(e) => setDifficultyLevel(e.target.value)}
+                className="w-full bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-sm focus:ring-2 focus:ring-indigo-500 py-2"
+              >
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-400 text-[10px] font-black uppercase tracking-tighter">Type</span>
+              <select
+                value={questionType}
+                onChange={(e) => setQuestionType(e.target.value)}
+                className="w-full bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-sm focus:ring-2 focus:ring-indigo-500 py-2"
+              >
+                <option value="mcq">MCQ</option>
+                <option value="subjective">Subjective</option>
+              </select>
+            </div>
+            <button
+              onClick={validate}
+              className="bg-[#4F46E5] hover:bg-[#6366F1] text-white px-3 py-2 rounded-xl font-black text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+            >
+              Generate
+            </button>
           </div>
         </div>
-
-        {/* Floating Footer Controls */}
-{/* Floating Footer Controls */}
-{/* Floating Footer Controls */}
-<div
-  className="
-    fixed bottom-0 left-0 right-0
-    md:bottom-4 md:left-1/2 md:-translate-x-1/2
-     md:w-[95%] lg:w-[90%] xl:w-[95%] absolute
-    bg-[#111827] rounded-t-2xl md:rounded-3xl p-3 md:p-4
-    shadow-2xl border border-white/10
-    z-50 flex flex-col items-center justify-center
-    
-    grid grid-cols-2 gap-2
-    sm:grid-cols-4 sm:gap-3
-    md:flex md:flex-row md:items-center md:gap-2
-  "
->
-  {/* MCQ */}
-  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 col-span-1">
-    <span className="text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-tighter">
-      MCQs
-    </span>
-    <input
-      type="number"
-      value={numOfMCQ}
-      onChange={(e) => setNumOfMCQ(e.target.value)}
-      min="1"
-      max="20"
-      className={`w-full sm:w-14 bg-gray-800 border-none rounded-lg sm:rounded-xl text-center font-black text-indigo-400 text-base sm:text-lg focus:ring-2 focus:ring-indigo-500 py-1 ${
-        mcqAlert ? "text-red-500" : ""
-      }`}
-    />
-  </div>
-
-  {/* Difficulty */}
-  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 col-span-1">
-    <span className="text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-tighter">
-      Difficulty
-    </span>
-    <select
-      value={difficultyLevel}
-      onChange={(e) => setDifficultyLevel(e.target.value)}
-      className="w-full sm:w-24 bg-gray-800 border-none rounded-lg sm:rounded-xl text-center font-black text-indigo-400 text-sm sm:text-base focus:ring-2 focus:ring-indigo-500 py-1"
-    >
-      <option value="easy">Easy</option>
-      <option value="medium">Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-  </div>
-
-  {/* Type */}
-  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 col-span-1">
-    <span className="text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-tighter">
-      Type
-    </span>
-    <select
-      value={questionType}
-      onChange={(e) => setQuestionType(e.target.value)}
-      className="w-full sm:w-28 bg-gray-800 border-none rounded-lg sm:rounded-xl text-center font-black text-indigo-400 text-sm sm:text-base focus:ring-2 focus:ring-indigo-500 py-1"
-    >
-      <option value="mcq">MCQ</option>
-      <option value="subjective">Subjective</option>
-    </select>
-  </div>
-
-  {/* Button */}
-  <button
-    onClick={validate}
-    className="
-      bg-[#4F46E5] hover:bg-[#6366F1] text-white
-      px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl 
-      font-black text-xs sm:text-sm tracking-wide
-      transition-all active:scale-95 shadow-lg shadow-indigo-500/20
-      
-      col-span-2 sm:col-span-1
-     w-full xl:w-[300px]
-    "
-  >
-    Generate
-  </button>
-</div>
       </div>
     </div>
-  )
+  </div>
+)
 
   const renderLoadingInterface = () => (
     <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300 ">
@@ -323,10 +352,10 @@ ${formatPrompt}`;
 
       {showDialog && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl text-center">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl text-center mx-4">
             <h2 className="text-lg font-bold mb-4 text-red-500">Something Went Wrong</h2>
             <p className="text-gray-600 mb-6">
-              We’re sorry, an issue occurred while processing your request.
+              We're sorry, an issue occurred while processing your request.
               Please try again.
             </p>
             <button
