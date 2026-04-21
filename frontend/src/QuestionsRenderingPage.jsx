@@ -792,7 +792,9 @@ ${JSON.stringify(payload)}
             </div>
           ) : (
             // ================= RESULTS UI =================
-            <div className="space-y-8 pb-20 w-full">
+            <div className={`space-y-8 pb-20 w-full ${
+            !isFullScreen && isChatOpen ? '-ml-[10px] ' : 'mx-auto'
+          } ${isFullScreen ? 'hidden' : ''}`}>
               {/* Only show pie chart and stats for non-subjective questions */}
               {!isAllSubjective && (
                 <div className="bg-white rounded-[2.5rem] border p-4 md:p-8 shadow-xl w-full">
