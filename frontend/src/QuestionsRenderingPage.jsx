@@ -1,47 +1,54 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Pie, Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import getServerUrl from "../utils/getServerUrl";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 // Memoized PieChart Component
 const PieChart = React.memo(({ chart, isChatOpen, isFullScreen }) => {
   const chartRef = useRef(null);
-  
-  const options = useMemo(() => ({
-    plugins: {
-      legend: {
-        position: "bottom",
-        labels: { color: "#4B5563", font: { weight: "600" } },
-      },
-    },
-    maintainAspectRatio: false,
-    responsive: true,
-  }), []);
 
-  const data = useMemo(() => ({
-    labels: ["Correct", "Wrong", "Skipped"],
-    datasets: [
-      {
-        data: [chart.right, chart.wrong, chart.notAnswered],
-        backgroundColor: ["#00D100", "#EF4444", "#E5E7EB"],
-        borderWidth: 0,
+  const options = useMemo(
+    () => ({
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#4B5563", font: { weight: "600" } },
+        },
       },
-    ],
-  }), [chart.right, chart.wrong, chart.notAnswered]);
+      maintainAspectRatio: false,
+      responsive: true,
+    }),
+    [],
+  );
+
+  const data = useMemo(
+    () => ({
+      labels: ["Correct", "Wrong", "Skipped"],
+      datasets: [
+        {
+          data: [chart.right, chart.wrong, chart.notAnswered],
+          backgroundColor: ["#00D100", "#EF4444", "#E5E7EB"],
+          borderWidth: 0,
+        },
+      ],
+    }),
+    [chart.right, chart.wrong, chart.notAnswered],
+  );
 
   useEffect(() => {
     if (chartRef.current) {
@@ -55,7 +62,9 @@ const PieChart = React.memo(({ chart, isChatOpen, isFullScreen }) => {
   }, [isChatOpen, isFullScreen]);
 
   return (
-    <div className={`${!isFullScreen && isChatOpen ? 'h-48' : 'h-64'} w-full transition-all duration-300`}>
+    <div
+      className={`${!isFullScreen && isChatOpen ? "h-48" : "h-64"} w-full transition-all duration-300`}
+    >
       <Pie ref={chartRef} data={data} options={options} />
     </div>
   );
@@ -64,23 +73,29 @@ const PieChart = React.memo(({ chart, isChatOpen, isFullScreen }) => {
 // Memoized CircularScore Component
 const CircularScore = React.memo(({ percentage }) => {
   const chartRef = useRef(null);
-  
-  const data = useMemo(() => ({
-    datasets: [
-      {
-        data: [percentage, 100 - percentage],
-        backgroundColor: ["#4F46E5", "#E5E7EB"],
-        borderWidth: 0,
-        cutout: "75%",
-      },
-    ],
-  }), [percentage]);
 
-  const options = useMemo(() => ({
-    plugins: { tooltip: { enabled: false } },
-    responsive: true,
-    maintainAspectRatio: true,
-  }), []);
+  const data = useMemo(
+    () => ({
+      datasets: [
+        {
+          data: [percentage, 100 - percentage],
+          backgroundColor: ["#4F46E5", "#E5E7EB"],
+          borderWidth: 0,
+          cutout: "75%",
+        },
+      ],
+    }),
+    [percentage],
+  );
+
+  const options = useMemo(
+    () => ({
+      plugins: { tooltip: { enabled: false } },
+      responsive: true,
+      maintainAspectRatio: true,
+    }),
+    [],
+  );
 
   return (
     <div className="relative h-40 w-40">
@@ -115,15 +130,15 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
   const chatContainerRef = useRef(null);
 
   const handleOptionChange = useCallback((i, option) => {
-    setSelectedAnswers(prev => ({ ...prev, [i]: option }));
+    setSelectedAnswers((prev) => ({ ...prev, [i]: option }));
   }, []);
 
   const handleSubjectiveChange = useCallback((i, val) => {
-    setSubjectiveAnswers(prev => ({ ...prev, [i]: val }));
+    setSubjectiveAnswers((prev) => ({ ...prev, [i]: val }));
   }, []);
 
   // Check if all questions are subjective
-  const isAllSubjective = questionArr.every(q => q.type !== "mcq");
+  const isAllSubjective = questionArr.every((q) => q.type !== "mcq");
 
   // Handle scroll event for chat container
   useEffect(() => {
@@ -135,15 +150,16 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
         setShowScrollButton(!isNearBottom);
       };
 
-      chatContainer.addEventListener('scroll', handleScroll);
-      return () => chatContainer.removeEventListener('scroll', handleScroll);
+      chatContainer.addEventListener("scroll", handleScroll);
+      return () => chatContainer.removeEventListener("scroll", handleScroll);
     }
   }, [isChatOpen]);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
     if (chatMessagesEndRef.current && chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } =
+        chatContainerRef.current;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
 
       if (isNearBottom) {
@@ -166,18 +182,21 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
   }, []);
 
   // ================= CHATBOT FUNCTIONS =================
-  const toggleQuestionSelection = useCallback((index) => {
-    if (selectedQuestionIndex === index) {
-      setSelectedQuestionIndex(null);
-      toast.info("Question deselected");
-    } else {
-      setSelectedQuestionIndex(index);
-      toast.success(`Question ${index + 1} selected`);
-      if (!isChatOpen) {
-        setIsChatOpen(true);
+  const toggleQuestionSelection = useCallback(
+    (index) => {
+      if (selectedQuestionIndex === index) {
+        setSelectedQuestionIndex(null);
+        toast.info("Question deselected");
+      } else {
+        setSelectedQuestionIndex(index);
+        toast.success(`Question ${index + 1} selected`);
+        if (!isChatOpen) {
+          setIsChatOpen(true);
+        }
       }
-    }
-  }, [selectedQuestionIndex, isChatOpen]);
+    },
+    [selectedQuestionIndex, isChatOpen],
+  );
 
   const buildChatContext = useCallback(() => {
     let context = "Available Questions and Content:\n\n";
@@ -185,7 +204,9 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
     questionArr.forEach((q, i) => {
       context += `Q${i + 1}: ${q.question}\n`;
       if (q.type === "mcq") {
-        context += `Options: ${Object.entries(q.options).map(([k, v]) => `${k}: ${v}`).join(", ")}\n`;
+        context += `Options: ${Object.entries(q.options)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")}\n`;
         context += `Correct Answer: ${q.answer}. ${q.options[q.answer]}\n`;
       } else {
         context += `Type: Subjective Question\n`;
@@ -198,7 +219,9 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
       context = `[SELECTED QUESTION FOR CONTEXT]\n`;
       context += `Question: ${selectedQ.question}\n`;
       if (selectedQ.type === "mcq") {
-        context += `Options: ${Object.entries(selectedQ.options).map(([k, v]) => `${k}: ${v}`).join(", ")}\n`;
+        context += `Options: ${Object.entries(selectedQ.options)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")}\n`;
         context += `Correct Answer: ${selectedQ.answer}. ${selectedQ.options[selectedQ.answer]}\n`;
       }
       context += `\n---\n\n${context}`;
@@ -213,9 +236,12 @@ const QuestionRenderingPage = ({ questionArr, changeSubmitted }) => {
     const userMessage = chatInput.trim();
     setChatInput("");
 
-    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setChatMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMessage },
+    ]);
     setIsChatLoading(true);
-    
+
     setTimeout(() => {
       scrollToBottom();
     }, 100);
@@ -248,54 +274,78 @@ Guidelines:
 
 Current selected question: ${selectedQuestionIndex !== null ? `Q${selectedQuestionIndex + 1}: ${questionArr[selectedQuestionIndex].question}` : "None selected"}`;
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+      const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              { role: "system", content: systemPrompt },
+              ...chatMessages.map((msg) => ({
+                role: msg.role,
+                content: msg.content,
+              })),
+              { role: "user", content: userMessage },
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          }),
         },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...chatMessages.map(msg => ({ role: msg.role, content: msg.content })),
-            { role: "user", content: userMessage }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
-      });
+      );
 
       const data = await response.json();
-      const aiResponse = data?.choices?.[0]?.message?.content || "Sorry, I couldn't process that request.";
+      const aiResponse =
+        data?.choices?.[0]?.message?.content ||
+        "Sorry, I couldn't process that request.";
 
-      setChatMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
-      
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: aiResponse },
+      ]);
+
       setTimeout(() => {
         scrollToBottom();
       }, 100);
     } catch (error) {
       console.error("Chat error:", error);
-      setChatMessages(prev => [...prev, {
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again."
-      }]);
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
       toast.error("Failed to get response");
-      
+
       setTimeout(() => {
         scrollToBottom();
       }, 100);
     } finally {
       setIsChatLoading(false);
     }
-  }, [chatInput, chatMessages, selectedQuestionIndex, questionArr, buildChatContext, scrollToBottom]);
+  }, [
+    chatInput,
+    chatMessages,
+    selectedQuestionIndex,
+    questionArr,
+    buildChatContext,
+    scrollToBottom,
+  ]);
 
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  }, [handleSendMessage]);
+  const handleKeyPress = useCallback(
+    (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage],
+  );
 
   // ================= RESULT =================
   const calculateResults = async () => {
@@ -378,17 +428,22 @@ Input:
 ${JSON.stringify(payload)}
 `;
 
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+        const res = await fetch(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: "llama-3.1-8b-instant",
+              messages: [
+                { role: "user", content: prompt + JSON.stringify(payload) },
+              ],
+            }),
           },
-          body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages: [{ role: "user", content: prompt + JSON.stringify(payload) }],
-          }),
-        });
+        );
 
         const data = await res.json();
         let text = data?.choices?.[0]?.message?.content;
@@ -434,33 +489,33 @@ ${JSON.stringify(payload)}
             <h2 style="font-size: 18px; color: #1f2937; margin-bottom: 20px;">Detailed Review</h2>
 
             ${questionArr
-        .map((item, index) => {
-          const userSelectionKey = selectedAnswers[index];
-          const isAnswered = !!userSelectionKey;
-          const isCorrect = userSelectionKey === item.answer;
+              .map((item, index) => {
+                const userSelectionKey = selectedAnswers[index];
+                const isAnswered = !!userSelectionKey;
+                const isCorrect = userSelectionKey === item.answer;
 
-          const correctText = item.options[item.answer];
-          const userText = isAnswered
-            ? item.options[userSelectionKey]
-            : "Not Answered";
+                const correctText = item.options[item.answer];
+                const userText = isAnswered
+                  ? item.options[userSelectionKey]
+                  : "Not Answered";
 
-          let bgColor = "#f9fafb";
-          let borderColor = "#d1d5db";
-          let statusIcon = "⚪";
+                let bgColor = "#f9fafb";
+                let borderColor = "#d1d5db";
+                let statusIcon = "⚪";
 
-          if (isAnswered) {
-            if (isCorrect) {
-              bgColor = "#f0fdf4";
-              borderColor = "#22c55e";
-              statusIcon = "✅";
-            } else {
-              bgColor = "#fef2f2";
-              borderColor = "#ef4444";
-              statusIcon = "❌";
-            }
-          }
+                if (isAnswered) {
+                  if (isCorrect) {
+                    bgColor = "#f0fdf4";
+                    borderColor = "#22c55e";
+                    statusIcon = "✅";
+                  } else {
+                    bgColor = "#fef2f2";
+                    borderColor = "#ef4444";
+                    statusIcon = "❌";
+                  }
+                }
 
-          return `
+                return `
                 <div style="margin-bottom: 20px; padding: 15px; border-radius: 12px; background-color: ${bgColor}; border-left: 5px solid ${borderColor};">
                     <p style="margin: 0 0 10px 0; font-weight: 600; color: #1f2937; font-size: 16px;">
                         ${index + 1}. ${item.question}
@@ -470,18 +525,19 @@ ${JSON.stringify(payload)}
                             <strong>Your Choice:</strong> ${isAnswered ? `(${userSelectionKey}) ${userText}` : `<i style="color: #6b7280;">Skipped</i>`} 
                             ${statusIcon}
                         </p>
-                        ${!isCorrect
-              ? `
+                        ${
+                          !isCorrect
+                            ? `
                             <p style="margin: 5px 0; color: #1f2937;">
                                 <strong style="color: #4F46E5;">Correct Answer:</strong> (${item.answer}) ${correctText}
                             </p>
                         `
-              : ""
-            }
+                            : ""
+                        }
                     </div>
                 </div>`;
-        })
-        .join("")}
+              })
+              .join("")}
 
             <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f0f0f0; margin-top: 20px;">
                 <p style="font-size: 12px; color: #9ca3af; margin: 0;">Generated by Quiz App &bull; ${new Date().toLocaleDateString("en-IN")}</p>
@@ -503,8 +559,9 @@ ${JSON.stringify(payload)}
 
     <div style="padding:20px;">
       
-      ${aiInsights?.overall
-        ? `
+      ${
+        aiInsights?.overall
+          ? `
         <div style="text-align:center;margin-bottom:20px;">
           <h2 style="margin:0;color:#1f2937;">
             Score: ${aiInsights.overall.percentage}%
@@ -514,7 +571,7 @@ ${JSON.stringify(payload)}
           </p>
         </div>
       `
-        : ""
+          : ""
       }
 
       <h2 style="font-size:18px;color:#1f2937;margin-bottom:20px;">
@@ -542,8 +599,9 @@ ${JSON.stringify(payload)}
               <strong>Your Answer:</strong> ${userAns}
             </p>
 
-            ${insight
-              ? `
+            ${
+              insight
+                ? `
               <p style="margin:5px 0;">
                 <strong>Score:</strong> ${insight.percentage}%
               </p>
@@ -551,7 +609,7 @@ ${JSON.stringify(payload)}
                 💡 ${insight.tip}
               </p>
             `
-              : ""
+                : ""
             }
 
           </div>`;
@@ -572,8 +630,8 @@ ${JSON.stringify(payload)}
   const generateHtmlContent = async () => {
     setSending(true);
 
-    const hasMCQ = questionArr.some(q => q.type === "mcq");
-    const hasSubjective = questionArr.some(q => q.type !== "mcq");
+    const hasMCQ = questionArr.some((q) => q.type === "mcq");
+    const hasSubjective = questionArr.some((q) => q.type !== "mcq");
 
     let html = "";
 
@@ -610,8 +668,8 @@ ${JSON.stringify(payload)}
         </div>
         <h3 className="text-2xl font-bold text-gray-800">AI is Evaluating</h3>
         <p className="text-gray-600">
-          Our AI is carefully analyzing your subjective answers.
-          This may take a few moments...
+          Our AI is carefully analyzing your subjective answers. This may take a
+          few moments...
         </p>
         <div className="flex justify-center gap-1">
           <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
@@ -628,7 +686,7 @@ ${JSON.stringify(payload)}
       remarkPlugins={[remarkGfm]}
       components={{
         code({ node, inline, className, children, ...props }) {
-          const match = /language-(\w+)/.exec(className || '');
+          const match = /language-(\w+)/.exec(className || "");
           return !inline && match ? (
             <SyntaxHighlighter
               style={vscDarkPlus}
@@ -636,7 +694,7 @@ ${JSON.stringify(payload)}
               PreTag="div"
               {...props}
             >
-              {String(children).replace(/\n$/, '')}
+              {String(children).replace(/\n$/, "")}
             </SyntaxHighlighter>
           ) : (
             <code className={className} {...props}>
@@ -648,10 +706,18 @@ ${JSON.stringify(payload)}
           return <p className="text-sm whitespace-pre-wrap mb-2">{children}</p>;
         },
         ul({ children }) {
-          return <ul className="list-disc list-inside text-sm space-y-1 mb-2">{children}</ul>;
+          return (
+            <ul className="list-disc list-inside text-sm space-y-1 mb-2">
+              {children}
+            </ul>
+          );
         },
         ol({ children }) {
-          return <ol className="list-decimal list-inside text-sm space-y-1 mb-2">{children}</ol>;
+          return (
+            <ol className="list-decimal list-inside text-sm space-y-1 mb-2">
+              {children}
+            </ol>
+          );
         },
         li({ children }) {
           return <li className="text-sm">{children}</li>;
@@ -663,7 +729,11 @@ ${JSON.stringify(payload)}
           return <em className="italic">{children}</em>;
         },
         blockquote({ children }) {
-          return <blockquote className="border-l-4 border-indigo-300 pl-4 italic my-2">{children}</blockquote>;
+          return (
+            <blockquote className="border-l-4 border-indigo-300 pl-4 italic my-2">
+              {children}
+            </blockquote>
+          );
         },
         h1({ children }) {
           return <h1 className="text-xl font-bold mb-2">{children}</h1>;
@@ -681,313 +751,370 @@ ${JSON.stringify(payload)}
   ));
 
   return (
-    <div className={`w-full  animate-in fade-in duration-500 relative
-     `}>
+    <div
+      className={`w-full  animate-in fade-in duration-500 relative
+     `}
+    >
       <ToastContainer />
 
       {isLoadingAI && <LoadingAnimation />}
-
-      <div className={`flex w-full transition-all duration-300 ${
-            !isFullScreen && isChatOpen ? 'lg:mr-[420px] -ml-20 ' : 'mx-auto'
-          } `}style={{ maxWidth: isChatOpen && !isFullScreen ? 'calc(100% - 200px)' : '100%' }}>
+      <button
+        onClick={() => changeSubmitted(false)}
+        className="flex items-center gap-2 w-full pt-4 mt-2  text-gray-400 hover:text-gray-500 transition-colors group"
+      >
+        <svg
+          className="w-4 h-4 transition-transform group-hover:-translate-x-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        <span className="text-sm font-medium">Create New Quiz</span>
+      </button>
+      <div
+        className={`flex w-full transition-all duration-300 ${
+          !isFullScreen && isChatOpen ? "lg:mr-[420px] -ml-20 " : "mx-auto"
+        } `}
+        style={{
+          maxWidth: isChatOpen && !isFullScreen ? "calc(100% - 200px)" : "100%",
+        }}
+      >
         {/* Main Content Area - FIXED WIDTH ISSUE */}
-        <div 
+        <div
           className={`flex-1 transition-all duration-300 ${
-            !isFullScreen && isChatOpen ? '-ml-[60px] ' : 'mx-auto'
-          } ${isFullScreen ? 'hidden' : ''}`} 
-         >
+            !isFullScreen && isChatOpen ? "-ml-[60px] " : "mx-auto"
+          } ${isFullScreen ? "hidden" : ""}`}
+        >
           <div className="w-full px-4 md:px-6 lg:px-8">
-          {!showResults ? (
-            // ================= QUIZ UI =================
-            <div className="space-y-6 pb-20 w-full">
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-black text-[#111827]">
-                  Knowledge Check
-                </h1>
-                {!isAllSubjective ? <p className="text-gray-500 font-medium">
-                  Select the best answer for each question.
-                </p> : <p className="text-gray-500 font-medium">
-                  Answer the following questions correctly.
-                </p>}
-              </div>
-
-              {questionArr.map((q, i) => (
-                <div
-                  key={i}
-                  className={`bg-white border transition-all duration-200 p-6 rounded-3xl shadow-sm hover:shadow-md w-full ${selectedQuestionIndex === i
-                      ? 'border-[#4F46E5] ring-4 ring-indigo-500/10'
-                      : 'border-[#E0E7FF]'
-                    }`}
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <span className="bg-[#EEF2FF] text-[#4F46E5] font-black px-3 py-1 rounded-lg text-sm">
-                      Q{i + 1}
-                    </span>
-                    <h2 className="font-bold text-[#1F2937] text-lg leading-snug flex-1">
-                      {q.question}
-                    </h2>
-                    <button
-                      onClick={() => {
-                        toggleQuestionSelection(i);
-                        setIsChatOpen(true);
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedQuestionIndex === i
-                          ? 'bg-[#4F46E5] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                    >
-                      {selectedQuestionIndex === i ? '✓ Selected' : 'Ask AI'}
-                    </button>
-                  </div>
-
-                  {q.type === "mcq" ? (
-                    <div className="grid grid-cols-1 gap-3 w-full">
-                      {Object.entries(q.options).map(([key, value]) => (
-                        <label
-                          key={key}
-                          className={`group flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all w-full
-                          ${selectedAnswers[i] === key
-                              ? "border-[#4F46E5] bg-[#EEF2FF]"
-                              : "border-[#F3F4F6] hover:border-[#E0E7FF] hover:bg-[#F9FAFB]"
-                            }`}
-                        >
-                          <input
-                            type="radio"
-                            name={`question-${i}`}
-                            checked={selectedAnswers[i] === key}
-                            onChange={() => handleOptionChange(i, key)}
-                            className="w-5 h-5 text-[#4F46E5]"
-                          />
-                          <span
-                            className={`ml-4 font-semibold ${selectedAnswers[i] === key
-                                ? "text-[#4F46E5]"
-                                : "text-gray-600"
-                              }`}
-                          >
-                            <span className="opacity-50 mr-2">{key}.</span> {value}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+            {!showResults ? (
+              // ================= QUIZ UI =================
+              <div className="space-y-6 pb-20 w-full">
+                <div className="text-center mb-8">
+                  <h1 className="text-3xl font-black text-[#111827]">
+                    Knowledge Check
+                  </h1>
+                  {!isAllSubjective ? (
+                    <p className="text-gray-500 font-medium">
+                      Select the best answer for each question.
+                    </p>
                   ) : (
-                    <textarea
-                      value={subjectiveAnswers[i] || ""}
-                      onChange={(e) => handleSubjectiveChange(i, e.target.value)}
-                      className="w-full border rounded-xl p-3"
-                      placeholder="Write your answer..."
-                      rows="4"
-                    />
+                    <p className="text-gray-500 font-medium">
+                      Answer the following questions correctly.
+                    </p>
                   )}
                 </div>
-              ))}
 
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2">
-                <button
-                  onClick={calculateResults}
-                  className="bg-[#111827] text-white py-4 px-12 rounded-2xl font-black shadow-2xl hover:bg-gray-800 transition-colors"
-                >
-                  Finalize Answers
-                </button>
-              </div>
-            </div>
-          ) : (
-            // ================= RESULTS UI =================
-            <div className={`space-y-8 pb-20 w-full ${
-            !isFullScreen && isChatOpen ? '-ml-[10px] ' : 'mx-auto'
-          } ${isFullScreen ? 'hidden' : ''}`}>
-              {/* Only show pie chart and stats for non-subjective questions */}
-              {!isAllSubjective && (
-                <div className="bg-white rounded-[2.5rem] border p-4 md:p-8 shadow-xl w-full">
-                  <h3 className="text-2xl font-black text-center mb-6">
-                    Your Performance
-                  </h3>
-
-                  <div className={`flex ${!isFullScreen && isChatOpen ? 'flex-col' : 'flex-col md:flex-row'} items-center gap-8 w-full`}>
-                    <div className={`${!isFullScreen && isChatOpen ? 'w-full' : 'flex-1 w-full max-w-[280px]'}`}>
-                      <PieChart chart={chart} isChatOpen={isChatOpen} isFullScreen={isFullScreen} />
+                {questionArr.map((q, i) => (
+                  <div
+                    key={i}
+                    className={`bg-white border transition-all duration-200 p-6 rounded-3xl shadow-sm hover:shadow-md w-full ${
+                      selectedQuestionIndex === i
+                        ? "border-[#4F46E5] ring-4 ring-indigo-500/10"
+                        : "border-[#E0E7FF]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <span className="bg-[#EEF2FF] text-[#4F46E5] font-black px-3 py-1 rounded-lg text-sm">
+                        Q{i + 1}
+                      </span>
+                      <h2 className="font-bold text-[#1F2937] text-lg leading-snug flex-1">
+                        {q.question}
+                      </h2>
+                      <button
+                        onClick={() => {
+                          toggleQuestionSelection(i);
+                          setIsChatOpen(true);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          selectedQuestionIndex === i
+                            ? "bg-[#4F46E5] text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {selectedQuestionIndex === i ? "✓ Selected" : "Ask AI"}
+                      </button>
                     </div>
 
-                    <div className="flex-1 space-y-4 w-full">
-                      {/* Total Score */}
-                      <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF] w-full">
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                          Total Score
-                        </p>
-                        <p className="text-4xl font-black text-[#1F2937]">
-                          {chart.right}{" "}
-                          <span className="text-xl text-gray-400">
-                            / {questionArr.filter(q => q.type === "mcq").length}
-                          </span>
-                        </p>
+                    {q.type === "mcq" ? (
+                      <div className="grid grid-cols-1 gap-3 w-full">
+                        {Object.entries(q.options).map(([key, value]) => (
+                          <label
+                            key={key}
+                            className={`group flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all w-full
+                          ${
+                            selectedAnswers[i] === key
+                              ? "border-[#4F46E5] bg-[#EEF2FF]"
+                              : "border-[#F3F4F6] hover:border-[#E0E7FF] hover:bg-[#F9FAFB]"
+                          }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${i}`}
+                              checked={selectedAnswers[i] === key}
+                              onChange={() => handleOptionChange(i, key)}
+                              className="w-5 h-5 text-[#4F46E5]"
+                            />
+                            <span
+                              className={`ml-4 font-semibold ${
+                                selectedAnswers[i] === key
+                                  ? "text-[#4F46E5]"
+                                  : "text-gray-600"
+                              }`}
+                            >
+                              <span className="opacity-50 mr-2">{key}.</span>{" "}
+                              {value}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={subjectiveAnswers[i] || ""}
+                        onChange={(e) =>
+                          handleSubjectiveChange(i, e.target.value)
+                        }
+                        className="w-full border rounded-xl p-3"
+                        placeholder="Write your answer..."
+                        rows="4"
+                      />
+                    )}
+                  </div>
+                ))}
+
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2">
+                  <button
+                    onClick={calculateResults}
+                    className="bg-[#111827] text-white py-4 px-12 rounded-2xl font-black shadow-2xl hover:bg-gray-800 transition-colors"
+                  >
+                    Finalize Answers
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ================= RESULTS UI =================
+              <div
+                className={`space-y-8 pb-20 w-full ${
+                  !isFullScreen && isChatOpen ? "-ml-[10px] " : "mx-auto"
+                } ${isFullScreen ? "hidden" : ""}`}
+              >
+                {/* Only show pie chart and stats for non-subjective questions */}
+                {!isAllSubjective && (
+                  <div className="bg-white rounded-[2.5rem] border p-4 md:p-8 shadow-xl w-full">
+                    <h3 className="text-2xl font-black text-center mb-6">
+                      Your Performance
+                    </h3>
+
+                    <div
+                      className={`flex ${!isFullScreen && isChatOpen ? "flex-col" : "flex-col md:flex-row"} items-center gap-8 w-full`}
+                    >
+                      <div
+                        className={`${!isFullScreen && isChatOpen ? "w-full" : "flex-1 w-full max-w-[280px]"}`}
+                      >
+                        <PieChart
+                          chart={chart}
+                          isChatOpen={isChatOpen}
+                          isFullScreen={isFullScreen}
+                        />
                       </div>
 
-                      {/* Stats */}
-                      <div className={`grid ${!isFullScreen && isChatOpen ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'} gap-4 w-full`}>
-                        {/* Correct */}
-                        <div className="p-4 bg-green-50 rounded-2xl">
-                          <p className="text-xs font-bold text-green-600 uppercase">
-                            Correct
+                      <div className="flex-1 space-y-4 w-full">
+                        {/* Total Score */}
+                        <div className="bg-[#F9FAFB] p-4 rounded-2xl border border-[#E0E7FF] w-full">
+                          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                            Total Score
                           </p>
-                          <p className="text-xl font-bold text-green-700">
-                            {chart.right}
-                          </p>
-                        </div>
-
-                        {/* Wrong */}
-                        <div className="p-4 bg-red-50 rounded-2xl">
-                          <p className="text-xs font-bold text-red-600 uppercase">
-                            Wrong
-                          </p>
-                          <p className="text-xl font-bold text-red-700">
-                            {chart.wrong}
+                          <p className="text-4xl font-black text-[#1F2937]">
+                            {chart.right}{" "}
+                            <span className="text-xl text-gray-400">
+                              /{" "}
+                              {
+                                questionArr.filter((q) => q.type === "mcq")
+                                  .length
+                              }
+                            </span>
                           </p>
                         </div>
 
-                        {/* Skipped */}
-                        <div className="p-4 bg-gray-50 rounded-2xl">
-                          <p className="text-xs font-bold text-gray-600 uppercase">
-                            Skipped
-                          </p>
-                          <p className="text-xl font-bold text-gray-700">
-                            {chart.notAnswered}
-                          </p>
+                        {/* Stats */}
+                        <div
+                          className={`grid ${!isFullScreen && isChatOpen ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-3"} gap-4 w-full`}
+                        >
+                          {/* Correct */}
+                          <div className="p-4 bg-green-50 rounded-2xl">
+                            <p className="text-xs font-bold text-green-600 uppercase">
+                              Correct
+                            </p>
+                            <p className="text-xl font-bold text-green-700">
+                              {chart.right}
+                            </p>
+                          </div>
+
+                          {/* Wrong */}
+                          <div className="p-4 bg-red-50 rounded-2xl">
+                            <p className="text-xs font-bold text-red-600 uppercase">
+                              Wrong
+                            </p>
+                            <p className="text-xl font-bold text-red-700">
+                              {chart.wrong}
+                            </p>
+                          </div>
+
+                          {/* Skipped */}
+                          <div className="p-4 bg-gray-50 rounded-2xl">
+                            <p className="text-xs font-bold text-gray-600 uppercase">
+                              Skipped
+                            </p>
+                            <p className="text-xl font-bold text-gray-700">
+                              {chart.notAnswered}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Show doughnut chart for subjective overall score */}
-              {aiInsights?.overall && (
-                <div className="bg-white p-4 md:p-8 rounded-3xl shadow-xl text-center flex flex-col justify-center items-center w-full">
-                  <h2 className="text-2xl font-bold mb-4">
-                    Overall Performance Score
-                  </h2>
+                {/* Show doughnut chart for subjective overall score */}
+                {aiInsights?.overall && (
+                  <div className="bg-white p-4 md:p-8 rounded-3xl shadow-xl text-center flex flex-col justify-center items-center w-full">
+                    <h2 className="text-2xl font-bold mb-4">
+                      Overall Performance Score
+                    </h2>
 
-                  <CircularScore percentage={aiInsights.overall.percentage} />
+                    <CircularScore percentage={aiInsights.overall.percentage} />
 
-                  <p className="mt-4 text-gray-600 max-w-md">
-                    🧠 {aiInsights.overall.tip}
-                  </p>
-                </div>
-              )}
+                    <p className="mt-4 text-gray-600 max-w-md">
+                      🧠 {aiInsights.overall.tip}
+                    </p>
+                  </div>
+                )}
 
-              {/* ===== REVIEW SECTION ===== */}
-              <div className="bg-white rounded-3xl border p-4 md:p-6 shadow-sm w-full">
-                <h3 className="text-xl font-bold mb-6">Detailed Review</h3>
+                {/* ===== REVIEW SECTION ===== */}
+                <div className="bg-white rounded-3xl border p-4 md:p-6 shadow-sm w-full">
+                  <h3 className="text-xl font-bold mb-6">Detailed Review</h3>
 
-                {questionArr.map((q, i) => {
-                  const isMCQ = q.type === "mcq";
-                  const isCorrect = selectedAnswers[i] === q.answer;
-                  const skipped = !selectedAnswers[i];
+                  {questionArr.map((q, i) => {
+                    const isMCQ = q.type === "mcq";
+                    const isCorrect = selectedAnswers[i] === q.answer;
+                    const skipped = !selectedAnswers[i];
 
-                  return (
-                    <div
-                      key={i}
-                      className={
-                        isMCQ
-                          ? `p-4 md:p-6 rounded-3xl border-2 my-3 w-full ${skipped
-                            ? "bg-gray-50 border-gray-200"
-                            : isCorrect
-                              ? "bg-white border-green-200"
-                              : "bg-white border-red-200"
-                          }`
-                          : "bg-gray-50 p-4 md:p-5 rounded-2xl border my-4 w-full"
-                      }
-                    >
-                      <div className="flex items-start gap-4 mb-2">
-                        <p className="font-bold text-[#1F2937] flex-1">
-                          Q{i + 1}: {q.question}
-                        </p>
-                        <button
-                          onClick={() => {
-                            toggleQuestionSelection(i);
-                            setIsChatOpen(true);
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedQuestionIndex === i
-                              ? 'bg-[#4F46E5] text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    return (
+                      <div
+                        key={i}
+                        className={
+                          isMCQ
+                            ? `p-4 md:p-6 rounded-3xl border-2 my-3 w-full ${
+                                skipped
+                                  ? "bg-gray-50 border-gray-200"
+                                  : isCorrect
+                                    ? "bg-white border-green-200"
+                                    : "bg-white border-red-200"
+                              }`
+                            : "bg-gray-50 p-4 md:p-5 rounded-2xl border my-4 w-full"
+                        }
+                      >
+                        <div className="flex items-start gap-4 mb-2">
+                          <p className="font-bold text-[#1F2937] flex-1">
+                            Q{i + 1}: {q.question}
+                          </p>
+                          <button
+                            onClick={() => {
+                              toggleQuestionSelection(i);
+                              setIsChatOpen(true);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              selectedQuestionIndex === i
+                                ? "bg-[#4F46E5] text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
-                        >
-                          {selectedQuestionIndex === i ? '✓ Selected' : 'Ask AI'}
-                        </button>
-                      </div>
-
-                      {isMCQ ? (
-                        <div className="text-sm space-y-1">
-                          <p
-                            className={`${skipped
-                                ? "text-gray-500"
-                                : isCorrect
-                                  ? "text-green-600 font-bold"
-                                  : "text-red-500 font-bold"
-                              }`}
                           >
-                            Your Answer:{" "}
-                            {selectedAnswers[i]
-                              ? `${selectedAnswers[i]}. ${q.options[selectedAnswers[i]]}`
-                              : "Skipped"}
-                          </p>
-
-                          <p className="text-indigo-600 font-bold">
-                            Correct: {q.answer}. {q.options[q.answer]}
-                          </p>
+                            {selectedQuestionIndex === i
+                              ? "✓ Selected"
+                              : "Ask AI"}
+                          </button>
                         </div>
-                      ) : (
-                        <>
-                          <p className="mb-3 text-gray-700">
-                            <strong>Your Answer:</strong>{" "}
-                            {subjectiveAnswers[i]?.trim() || "Skipped"}
-                          </p>
 
-                          {aiInsights?.questions?.[i] && (
-                            <div className="bg-indigo-50 p-4 rounded-xl mt-2">
-                              <p className="font-semibold text-indigo-900 mb-1">
-                                Score: {aiInsights.questions[i].percentage}%
-                              </p>
-                              <p className="text-indigo-700">
-                                💡 {aiInsights.questions[i].tip}
-                              </p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                        {isMCQ ? (
+                          <div className="text-sm space-y-1">
+                            <p
+                              className={`${
+                                skipped
+                                  ? "text-gray-500"
+                                  : isCorrect
+                                    ? "text-green-600 font-bold"
+                                    : "text-red-500 font-bold"
+                              }`}
+                            >
+                              Your Answer:{" "}
+                              {selectedAnswers[i]
+                                ? `${selectedAnswers[i]}. ${q.options[selectedAnswers[i]]}`
+                                : "Skipped"}
+                            </p>
 
-              {/* EMAIL SECTION */}
-              <div className="bg-[#111827] p-4 md:p-8 rounded-[2rem] text-white space-y-6 shadow-2xl w-full">
-                <h4 className="text-center font-bold text-indigo-300 uppercase tracking-widest text-sm">
-                  Save your report
-                </h4>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    onChange={(e) => setGmail(e.target.value)}
-                    value={gmail}
-                    className="flex-1 bg-gray-800 border-none rounded-xl p-4 text-white focus:ring-2 focus:ring-indigo-500"
-                  />
+                            <p className="text-indigo-600 font-bold">
+                              Correct: {q.answer}. {q.options[q.answer]}
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="mb-3 text-gray-700">
+                              <strong>Your Answer:</strong>{" "}
+                              {subjectiveAnswers[i]?.trim() || "Skipped"}
+                            </p>
+
+                            {aiInsights?.questions?.[i] && (
+                              <div className="bg-indigo-50 p-4 rounded-xl mt-2">
+                                <p className="font-semibold text-indigo-900 mb-1">
+                                  Score: {aiInsights.questions[i].percentage}%
+                                </p>
+                                <p className="text-indigo-700">
+                                  💡 {aiInsights.questions[i].tip}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* EMAIL SECTION */}
+                <div className="bg-[#111827] p-4 md:p-8 rounded-[2rem] text-white space-y-6 shadow-2xl w-full">
+                  <h4 className="text-center font-bold text-indigo-300 uppercase tracking-widest text-sm">
+                    Save your report
+                  </h4>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="email"
+                      placeholder="email@example.com"
+                      onChange={(e) => setGmail(e.target.value)}
+                      value={gmail}
+                      className="flex-1 bg-gray-800 border-none rounded-xl p-4 text-white focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      onClick={generateHtmlContent}
+                      disabled={!gmail.includes("@") || sending}
+                      className="bg-[#4F46E5] hover:bg-[#6366F1] disabled:bg-gray-700 text-white py-4 px-8 rounded-xl font-bold transition-all"
+                    >
+                      {sending ? "Sending..." : "Email Report"}
+                    </button>
+                  </div>
                   <button
-                    onClick={generateHtmlContent}
-                    disabled={!gmail.includes("@") || sending}
-                    className="bg-[#4F46E5] hover:bg-[#6366F1] disabled:bg-gray-700 text-white py-4 px-8 rounded-xl font-bold transition-all"
+                    onClick={() => changeSubmitted(false)}
+                    className="w-full text-gray-400 hover:text-white text-xs font-bold transition-all uppercase tracking-widest pt-4 border-t border-white/10"
                   >
-                    {sending ? "Sending..." : "Email Report"}
+                    Create New Quiz
                   </button>
                 </div>
-                <button
-                  onClick={() => changeSubmitted(false)}
-                  className="w-full text-gray-400 hover:text-white text-xs font-bold transition-all uppercase tracking-widest pt-4 border-t border-white/10"
-                >
-                  Create New Quiz
-                </button>
               </div>
-            </div>
-          )}
+            )}
           </div>
         </div>
 
@@ -995,22 +1122,31 @@ ${JSON.stringify(payload)}
         {!isFullScreen && (
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className={`fixed bottom-6 right-6 z-40 bg-[#4F46E5] hover:bg-[#6366F1] text-white p-4 rounded-full shadow-2xl transition-all duration-300 ${isChatOpen ? 'scale-0' : 'scale-100'
-              }`}
+            className={`fixed bottom-6 right-6 z-40 bg-[#4F46E5] hover:bg-[#6366F1] text-white p-4 rounded-full shadow-2xl transition-all duration-300 ${
+              isChatOpen ? "scale-0" : "scale-100"
+            }`}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+              />
             </svg>
           </button>
         )}
 
         {/* Chatbot Sidebar / Full Screen */}
         <div
-          className={`fixed top-0 right-0 h-full bg-white shadow-2xl transform transition-all duration-300 z-50 flex flex-col ${isChatOpen ? 'translate-x-0' : 'translate-x-full'
-            } ${isFullScreen
-              ? 'w-full'
-              : 'w-full lg:w-[420px]'
-            }`}
+          className={`fixed top-0 right-0 h-full bg-white shadow-2xl transform transition-all duration-300 z-50 flex flex-col ${
+            isChatOpen ? "translate-x-0" : "translate-x-full"
+          } ${isFullScreen ? "w-full" : "w-full lg:w-[420px]"}`}
         >
           {/* Chat Header */}
           <div className="bg-[#1F2937] text-white p-6 flex items-center justify-between">
@@ -1023,7 +1159,7 @@ ${JSON.stringify(payload)}
                 <p className="text-xs text-gray-400">
                   {selectedQuestionIndex !== null
                     ? `Selected: Q${selectedQuestionIndex + 1}`
-                    : 'Ask about any topic'}
+                    : "Ask about any topic"}
                 </p>
               </div>
             </div>
@@ -1035,12 +1171,32 @@ ${JSON.stringify(payload)}
                 title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
               >
                 {isFullScreen ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0l5 5M4 4l5 5M15 9l5-5m0 0l-5 5m5-5l-5 5M9 15l-5 5m0 0l5-5m-5 5l5-5M15 15l5 5m0 0l-5-5m5 5l-5-5" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 9L4 4m0 0l5 5M4 4l5 5M15 9l5-5m0 0l-5 5m5-5l-5 5M9 15l-5 5m0 0l5-5m-5 5l5-5M15 15l5 5m0 0l-5-5m5 5l-5-5"
+                    />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                    />
                   </svg>
                 )}
               </button>
@@ -1052,8 +1208,18 @@ ${JSON.stringify(payload)}
                 }}
                 className="text-gray-400 hover:text-white transition-colors p-2"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -1067,16 +1233,20 @@ ${JSON.stringify(payload)}
             {chatMessages.length === 0 ? (
               <div className="text-center text-gray-500 mt-8">
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
-                  <p className="font-bold mb-2">👋 Hello! I'm your AI assistant</p>
+                  <p className="font-bold mb-2">
+                    👋 Hello! I'm your AI assistant
+                  </p>
                   <p className="text-sm">
                     {selectedQuestionIndex !== null
                       ? `You've selected Question ${selectedQuestionIndex + 1}. Feel free to ask anything about it!`
-                      : 'You can ask me about any question or topic. Select a specific question for more focused help.'}
+                      : "You can ask me about any question or topic. Select a specific question for more focused help."}
                   </p>
                   <div className="mt-4 space-y-2">
                     <p className="text-xs text-gray-400">Try asking:</p>
                     <button
-                      onClick={() => setChatInput("Can you explain this concept?")}
+                      onClick={() =>
+                        setChatInput("Can you explain this concept?")
+                      }
                       className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100"
                     >
                       "Can you explain this concept?"
@@ -1094,18 +1264,21 @@ ${JSON.stringify(payload)}
               chatMessages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-2xl ${msg.role === 'user'
-                        ? 'bg-[#4F46E5] text-white'
-                        : 'bg-white text-gray-800 shadow-sm'
-                      }`}
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+                      msg.role === "user"
+                        ? "bg-[#4F46E5] text-white"
+                        : "bg-white text-gray-800 shadow-sm"
+                    }`}
                   >
-                    {msg.role === 'assistant' ? (
+                    {msg.role === "assistant" ? (
                       <MarkdownMessage content={msg.content} />
                     ) : (
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1130,8 +1303,18 @@ ${JSON.stringify(payload)}
                 onClick={scrollToBottom}
                 className="sticky bottom-4 left-1/2 -translate-x-1/2 bg-[#4F46E5] text-white p-3 rounded-full shadow-lg hover:bg-[#6366F1] transition-all z-10"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
                 </svg>
               </button>
             )}
@@ -1161,15 +1344,25 @@ ${JSON.stringify(payload)}
                 placeholder="Ask anything..."
                 className="flex-1 border rounded-xl p-3 resize-none text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 rows="1"
-                style={{ minHeight: '44px', maxHeight: '120px' }}
+                style={{ minHeight: "44px", maxHeight: "120px" }}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!chatInput.trim() || isChatLoading}
                 className="bg-[#4F46E5] hover:bg-[#6366F1] disabled:bg-gray-300 text-white p-3 rounded-xl transition-all"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               </button>
             </div>
