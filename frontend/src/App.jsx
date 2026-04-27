@@ -13,7 +13,7 @@ const App = () => {
           {/* <Route paths='/kl' element={<DevCredits /> } /> */}
           {/* <Route path="/questions" element={<QuestionPage/>}/> */}
         </Routes>
-        <DevCredits />
+        {/* <DevCredits /> */}
       </BrowserRouter>
     </>
   );

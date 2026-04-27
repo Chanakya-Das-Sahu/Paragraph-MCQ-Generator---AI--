@@ -237,9 +237,9 @@ const renderInputPannel = () => (
                       onChange={(e) => setDifficultyLevel(e.target.value)}
                       className="w-28 bg-gray-800 border-none rounded-lg text-center font-black text-indigo-400 text-sm focus:ring-2 focus:ring-indigo-500 py-1.5"
                     >
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
+                      <option value="medium">Easy</option>
+                      <option value="medium but bit hard">Medium</option>
+                      <option value="very hard">Hard</option>
                     </select>
                   </div>
 
