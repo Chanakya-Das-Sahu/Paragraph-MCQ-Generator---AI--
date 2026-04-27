@@ -899,7 +899,7 @@ ${JSON.stringify(payload)}
             ) : (
               // ================= RESULTS UI =================
               <div
-                className={`space-y-8 pb-20 w-full ${
+                className={`space-y-8 pb-20 mt-4 w-full ${
                   !isFullScreen && isChatOpen ? "-ml-[10px] " : "mx-auto"
                 } ${isFullScreen ? "hidden" : ""}`}
               >
